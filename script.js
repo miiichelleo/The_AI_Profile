@@ -72,12 +72,14 @@ function createMetrics() {
 }
 
 function scaleStage() {
+  // Fit the stage to the viewport while preserving aspect ratio.
   const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT, 1);
   const renderedStageWidth = STAGE_WIDTH * scale;
-  const rightGutterPx = Math.max(0, window.innerWidth - renderedStageWidth);
-  const trackerShiftDesignPx = scale > 0 ? rightGutterPx / scale : 0;
+  const horizontalGutter = Math.max(0, (window.innerWidth - renderedStageWidth) / 2);
+  const gutterInDesignPx = scale > 0 ? horizontalGutter / scale : 0;
   document.documentElement.style.setProperty("--stage-scale", String(scale));
-  document.documentElement.style.setProperty("--tracker-shift", `${trackerShiftDesignPx}px`);
+  document.documentElement.style.setProperty("--tracker-shift", `${gutterInDesignPx}px`);
+  document.documentElement.style.setProperty("--screen-gutter", `${gutterInDesignPx}px`);
 }
 
 function paragraphHtml(lines, emphasizeExaggerated = false) {
@@ -378,7 +380,12 @@ function renderProfile() {
                 </div>
                 <button class="summary-close" data-action="toggle-summary" aria-label="Close summary">&times;</button>
               </section>`
-            : `<button class="summary-tab" data-action="toggle-summary" aria-label="Open interaction summary"></button>`
+            : `<button class="summary-tab" data-action="toggle-summary" aria-label="Open interaction summary">
+                <div class="tab-copy">
+                  <span class="tab-arrow">&#8249;</span>
+                  <span class="tab-label">Interaction summary</span>
+                </div>
+              </button>`
         }
       </div>
     </section>

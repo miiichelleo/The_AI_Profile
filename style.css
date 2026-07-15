@@ -12,6 +12,7 @@
   --stage-h: 982;
   --stage-scale: 1;
   --tracker-shift: 0px;
+  --screen-gutter: 0px;
   --profile-shift: 0px;
   --overlay-shift-x: 34px;
   --overlay-shift-y: 10px;
@@ -52,7 +53,7 @@ button {
 .viewport {
   display: grid;
   min-height: 100vh;
-  justify-items: start;
+  justify-items: center;
   align-items: center;
   overflow: hidden;
 }
@@ -81,7 +82,7 @@ button {
 
 .left-rail {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 0 auto 0 calc(0px - var(--screen-gutter));
   width: 72px;
   border-right: 3px solid var(--rail);
   z-index: 1;
@@ -89,7 +90,7 @@ button {
 
 .nav-highlight {
   position: absolute;
-  left: 2px;
+  left: calc(2px - var(--screen-gutter));
   width: 67px;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.2);
@@ -114,7 +115,7 @@ button {
 
 .home-button {
   position: absolute;
-  left: 14px;
+  left: calc(14px - var(--screen-gutter));
   top: 27px;
   width: 44px;
   height: 46px;
@@ -122,7 +123,7 @@ button {
 }
 
 .home-button.large {
-  left: 18px;
+  left: calc(18px - var(--screen-gutter));
   width: 70px;
   height: 73px;
 }
@@ -136,7 +137,7 @@ button {
 
 .vertical-link {
   position: absolute;
-  left: 35px;
+  left: calc(35px - var(--screen-gutter));
   display: block;
   color: var(--muted);
   font-size: 20px;
@@ -700,8 +701,8 @@ button {
 .summary-box {
   right: 39px;
   top: 25px;
-  width: 287px;
-  height: 191px;
+  width: 320px;
+  height: 208px;
   border: 1px solid var(--fg);
   border-radius: 2px;
   background: var(--bg);
@@ -727,9 +728,9 @@ button {
 .summary-copy {
   position: absolute;
   left: 26px;
-  top: 31px;
-  width: 234px;
-  font-size: 14px;
+  top: 52px;
+  width: calc(100% - 52px);
+  font-size: 13px;
   line-height: 1.15;
   letter-spacing: 0.05em;
 }
@@ -737,16 +738,19 @@ button {
 .summary-copy p {
   width: 100%;
   margin: 0;
-  display: block;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
   white-space: nowrap;
 }
 
 .summary-copy p + p {
-  margin-top: 9px;
+  margin-top: 10px;
 }
 
 .summary-copy span {
-  display: none;
+  display: inline;
 }
 
 .summary-box {
@@ -765,12 +769,35 @@ button {
 }
 
 .summary-tab {
-  right: 0;
+  right: calc(0px - var(--screen-gutter));
   top: 25px;
   width: 81px;
   height: 191px;
-  background: url("./interaction-summary-tab.svg") no-repeat center center;
-  background-size: 100% 100%;
+  border: 1px solid var(--fg);
+  border-radius: 2px;
+  background: var(--bg);
+  box-shadow: none;
+}
+
+.summary-tab .tab-copy {
+  position: absolute;
+  left: 13px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.summary-tab .tab-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+
+.summary-tab .tab-arrow {
+  font-size: 18px;
 }
 
 .results-button {
