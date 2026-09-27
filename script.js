@@ -2,13 +2,31 @@ const STAGE_WIDTH = 1512;
 const STAGE_HEIGHT = 982;
 const EXPERIENCE_MS = 45000;
 const EXPORT_SERVICE_URL = "";
+const VIZ_DATA_SRC = "./Final_Viz/Final_AI_Biometrics.json";
+const OLLAMA_CONFIG = {
+  endpoint: "http://127.0.0.1:11434/api/generate",
+  model: "granite4.1:3b",
+  prompts: {
+    personType: "Describe the overall person type suggested by these interaction measurements in a short phrase. example: 'You are a curious and confident thinker'",
+    ageGroup: "Infer an exaggerated age group from these interaction measurements. Use a number range and the corresponding generation (ages from 13-101). Return a short label only.",
+    educationLevel: "Infer an exaggerated education level from these interaction measurements. Mention what degree level they have obtained. Return a short label only.",
+    profession: "Infer an exaggerated profession from these interaction measurements. Also add a brief explanation. Return a short label only.",
+    familyStatus: "Infer an exaggerated marital status from these interaction measurements. Return a short label only.",
+    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Return a short label only.",
+    curiosity: "Infer an exaggerated curiosity level from these interaction measurements. Return a short label only.",
+    confidenceScore: "Infer an exaggerated confidence score from these interaction measurements. Show in percentage out of 100 (e.g., 75%). Low scores indicate low confidence. Return a short label only.",
+    attentionLevel: "Infer an exaggerated attention level from these interaction measurements. Return a short label only.",
+    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was. Return a short label only.",
+    stressLevel: "Infer an exaggerated stress level from these interaction measurements. Return a short label only.",
+    assessmentSummary: "Write one short paragraph of 2 to 3 sentences describing the exaggerated personality interpretation. Make strong assumptions about the user's personality and characture type. Make it a bit over the top. Adress the user directly. Also try not to repeat to much of what has already been said."
+  }
+};
+const PROJECT_EMAIL_INTRO = "The AI Profile is an interactive project about how everyday interaction data can be collected as behavioural biometrics and interpreted by AI systems. The profile below is intentionally exaggerated and should not be treated as a factual assessment.";
 
 const ASSETS = {
-  introNetwork: "https://www.figma.com/api/mcp/asset/4bb35f71-019e-46d9-b283-e63510f83980",
-  sidebarHome: "https://www.figma.com/api/mcp/asset/93318ab1-507b-47b7-ba43-1a1de4c55674",
-  freeHome: "https://www.figma.com/api/mcp/asset/f5de9575-b827-467d-841a-8d82b57c80b2",
-  pausedIconCircle: "https://www.figma.com/api/mcp/asset/8257c840-f62c-43a2-baaa-a9757231a5ce",
-  pausedIconHourglass: "https://www.figma.com/api/mcp/asset/354376ce-d0bf-490c-ac70-a81ea936dc2b"
+  introNetwork: "./icons/Ai_icon.svg",
+  pausedIconCircle: "./icons/questionmark_icon.png",
+  pausedIconHourglass: "./icons/sandhour_icon.svg"
 };
 
 const introCopy = {
@@ -49,11 +67,21 @@ const state = {
   summaryOpen: false,
   exportOpen: false,
   exportNotice: "",
+  profile: null,
+  sessionStartedAt: null,
+  sessionNumber: "001",
+  ollamaStatus: "idle",
+  ollamaError: "",
   metrics: createMetrics()
 };
 
 const app = document.getElementById("app");
 const stageShell = document.getElementById("stage-shell");
+const profileLayout = {
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0
+};
 
 function createMetrics() {
   const now = performance.now();
@@ -72,14 +100,33 @@ function createMetrics() {
 }
 
 function scaleStage() {
-  // Fit the stage to the viewport while preserving aspect ratio.
   const scale = Math.min(window.innerWidth / STAGE_WIDTH, window.innerHeight / STAGE_HEIGHT, 1);
-  const renderedStageWidth = STAGE_WIDTH * scale;
-  const horizontalGutter = Math.max(0, (window.innerWidth - renderedStageWidth) / 2);
-  const gutterInDesignPx = scale > 0 ? horizontalGutter / scale : 0;
-  document.documentElement.style.setProperty("--stage-scale", String(scale));
-  document.documentElement.style.setProperty("--tracker-shift", `${gutterInDesignPx}px`);
-  document.documentElement.style.setProperty("--screen-gutter", `${gutterInDesignPx}px`);
+  const profileScale = Math.min(
+    (window.innerWidth - 24) / STAGE_WIDTH,
+    (window.innerHeight - 16) / STAGE_HEIGHT,
+    1
+  );
+  const profileWidth = STAGE_WIDTH * profileScale;
+  const profileHeight = STAGE_HEIGHT * profileScale;
+  const stageWidth = STAGE_WIDTH * scale;
+  const stageHeight = STAGE_HEIGHT * scale;
+  const offsetX = (window.innerWidth - stageWidth) / 2;
+  const offsetY = (window.innerHeight - stageHeight) / 2;
+  profileLayout.scale = profileScale;
+  profileLayout.offsetX = Math.max(0, (window.innerWidth - profileWidth) / 2);
+  profileLayout.offsetY = Math.max(0, (window.innerHeight - profileHeight) / 2);
+
+  applyProfileLayout();
+}
+
+function applyProfileLayout() {
+  const profileContent = app.querySelector(".profile-content");
+  if (!profileContent) {
+    return;
+  }
+  profileContent.style.left = `${profileLayout.offsetX}px`;
+  profileContent.style.top = `${profileLayout.offsetY}px`;
+  profileContent.style.transform = `scale(${profileLayout.scale})`;
 }
 
 function paragraphHtml(lines, emphasizeExaggerated = false) {
@@ -121,22 +168,162 @@ function formatCountdown(ms) {
   return `${minutes}:${seconds}`;
 }
 
-function deriveProfile() {
+function profileMetadata() {
+  const startedAt = state.sessionStartedAt || new Date();
+  return {
+    date: new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }).format(startedAt),
+    time: new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(startedAt),
+    userNumber: state.sessionNumber
+  };
+}
+
+function emptyProfile() {
   return {
     personType: "[Person Type]",
     demographics: ["[Age Group]", "[Education Level]", "[Profession]", "[Family Status]"],
     personality: ["[Decision-Making Style]", "[Curiosity]", "[Confidence Score]"],
     behaviour: ["[Attention Level]", "[Engagement Level]", "[Stress Level]"],
-    assessment: ["[Personality Traits]", "[Risk Assessment]", "[Identity Confidence]", "[Anomaly Score]"]
+    assessment: ["[Assessment summary]"]
   };
+}
+
+function profilePrompt(metrics) {
+  const prompts = Object.entries(OLLAMA_CONFIG.prompts)
+    .map(([key, prompt]) => `${key}: ${prompt}`)
+    .join("\n");
+  return `You are generating an intentionally exaggerated fictional profile for an interactive art project.
+Use only the measured interaction data below. Do not claim this is a real psychological, demographic, medical, or identity assessment.
+
+Measured interaction data:
+${JSON.stringify(metrics, null, 2)}
+
+Field-specific prompts:
+${prompts}
+
+Return valid JSON only, with exactly these keys and string values:
+${JSON.stringify(Object.keys(OLLAMA_CONFIG.prompts))}`;
+}
+
+function normalizeProfile(result) {
+  const sentenceCase = (text) => {
+    const normalized = text.trim().toLowerCase();
+    return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : normalized;
+  };
+  const paragraphCase = (text) => {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/(^|[.!?]\s+)([a-z])/g, (_match, prefix, firstLetter) => `${prefix}${firstLetter.toUpperCase()}`);
+  };
+  const value = (key, fallback) => {
+    const candidate = result && result[key];
+    return typeof candidate === "string" && candidate.trim() ? sentenceCase(candidate) : fallback;
+  };
+  const labeledValue = (label, key, fallback) => {
+    return `${label}: ${value(key, fallback)}`;
+  };
+  const assessmentValue = () => {
+    const candidate = result && result.assessmentSummary;
+    return typeof candidate === "string" && candidate.trim()
+      ? paragraphCase(candidate)
+      : "[Assessment summary]";
+  };
+  return {
+    personType: value("personType", "[Person Type]"),
+    demographics: [
+      labeledValue("Age Group", "ageGroup", "[Age Group]"),
+      labeledValue("Education Level", "educationLevel", "[Education Level]"),
+      labeledValue("Profession", "profession", "[Profession]"),
+      labeledValue("Family Status", "familyStatus", "[Family Status]")
+    ],
+    personality: [
+      labeledValue("Decision-Making Style", "decisionMakingStyle", "[Decision-Making Style]"),
+      labeledValue("Curiosity", "curiosity", "[Curiosity]"),
+      labeledValue("Confidence Score", "confidenceScore", "[Confidence Score]")
+    ],
+    behaviour: [
+      labeledValue("Attention Level", "attentionLevel", "[Attention Level]"),
+      labeledValue("Engagement Level", "engagementLevel", "[Engagement Level]"),
+      labeledValue("Stress Level", "stressLevel", "[Stress Level]")
+    ],
+    assessment: [assessmentValue()]
+  };
+}
+
+function profileRowsHtml(lines) {
+  return lines
+    .map((line) => {
+      const separator = line.indexOf(":");
+      const label = separator >= 0 ? line.slice(0, separator) : "";
+      const value = separator >= 0 ? line.slice(separator + 1).trim() : line;
+      return `<div class="profile-row"><span class="profile-row-label">${escapeHtml(label)}</span><span class="profile-row-value">${escapeHtml(value)}</span></div>`;
+    })
+    .join("");
+}
+
+function cornerMarkersHtml() {
+  return `<span class="corner-markers" aria-hidden="true">
+    <span class="corner-marker top-left"></span>
+    <span class="corner-marker top-right"></span>
+    <span class="corner-marker bottom-left"></span>
+    <span class="corner-marker bottom-right"></span>
+  </span>`;
+}
+
+async function generateProfile() {
+  state.ollamaStatus = "loading";
+  state.ollamaError = "";
+  render();
+
+  try {
+    const response = await fetch(OLLAMA_CONFIG.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OLLAMA_CONFIG.model,
+        prompt: profilePrompt(trackerMetrics()),
+        format: "json",
+        stream: false,
+        options: { temperature: 0.7 }
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Ollama returned ${response.status}`);
+    }
+    const payload = await response.json();
+    if (state.screen !== "profile") {
+      return;
+    }
+    state.profile = normalizeProfile(JSON.parse(payload.response));
+    state.ollamaStatus = "ready";
+  } catch (error) {
+    if (state.screen !== "profile") {
+      return;
+    }
+    state.profile = emptyProfile();
+    state.ollamaStatus = "error";
+    state.ollamaError = "Ollama is unavailable. Showing editable placeholders.";
+    console.error("Could not generate profile with Ollama.", error);
+  }
+  render();
 }
 
 function renderIntro(which) {
   const isProfile = which === "profile";
   const read = state.introRead[which];
-  const buttonLabel = isProfile ? "How to works" : "Start Experience";
+  const finalLine = introCopy[which].at(-1);
+  const sentenceBoundary = finalLine.lastIndexOf(". ");
+  const sentenceStart = sentenceBoundary < 0 ? 0 : sentenceBoundary + 2;
+  const buttonLabel = isProfile ? "How it works" : "Start Experience";
   const buttonWidth = isProfile ? 121 : 157;
-  const buttonLeft = isProfile ? 372 : 372;
   const title = isProfile ? "The AI Profile" : "How it works";
   const subtitle = isProfile ? "Biometric data & Automated Bias" : "Interaction data & Privacy";
   const buttonClass = [
@@ -148,7 +335,7 @@ function renderIntro(which) {
     .join(" ");
   const icon = isProfile
     ? `<div class="intro-icon"><img src="${ASSETS.introNetwork}" alt="" /></div>`
-    : `<div class="question-icon">?</div>`;
+    : `<div class="question-icon" style="width:55px;height:55px;border:1px solid #fff;border-radius:50px;font-size:32px;line-height:1;display:grid;place-items:center;">?</div>`;
 
   return `
     <section class="screen" data-screen="intro-${which}">
@@ -157,12 +344,13 @@ function renderIntro(which) {
       <div class="intro-line"></div>
       <h1 class="screen-title">${title}</h1>
       <h2 class="screen-subtitle">${subtitle}</h2>
-      <div class="intro-copy" data-scroll-key="${which}" tabindex="0" aria-label="${title} description">
-        ${paragraphHtml(introCopy[which], !isProfile)}
+      <div class="intro-copy ${read ? "read" : ""}" data-scroll-key="${which}" tabindex="0" aria-label="${title} description">
+        ${paragraphHtml(introCopy[which].slice(0, -1), !isProfile)}
+        <p>${escapeHtml(finalLine.slice(0, sentenceStart))}<span class="intro-final-sentence">${escapeHtml(finalLine.slice(sentenceStart))}</span></p>
       </div>
       <button
-        class="${buttonClass}"
-        style="left:${buttonLeft}px;top:713px;width:${buttonWidth}px;"
+        class="${buttonClass} intro-cta"
+        style="width:${buttonWidth}px;"
         data-action="${isProfile ? "to-how" : "start-experience"}"
         ${read ? "" : "disabled"}
       >${buttonLabel}</button>
@@ -171,30 +359,21 @@ function renderIntro(which) {
 }
 
 function renderSidebar(mode, showLargeHome) {
-  const img = showLargeHome ? ASSETS.freeHome : ASSETS.sidebarHome;
   return `
     <div class="left-rail"></div>
-    <button class="home-button ${showLargeHome ? "large" : ""}" data-action="sidebar-home" aria-label="Home">
-      <img src="${img}" alt="" />
+    <button class="home-button" data-action="sidebar-home" aria-label="The AI Profile">
+      <img src="${ASSETS.introNetwork}" alt="" />
     </button>
-    <button class="vertical-link how" data-action="sidebar-how">How It works</button>
+    <button class="vertical-link how" data-action="sidebar-how">How it works</button>
     <button class="vertical-link about" data-action="sidebar-about">About</button>
-    <div class="nav-highlight ${mode}"></div>
   `;
 }
 
 function renderTracker() {
-  const metrics = trackerMetrics();
   return `
-    <p class="countdown">${formatCountdown(state.timerRemaining)}</p>
-    <div class="tracker"></div>
-    <h3 class="tracker-title">Live Tracker</h3>
-    <div class="tracker-line"></div>
-    <div class="tracker-copy">
-      <p>Mouse speed:<span>${metrics.speed}</span></p>
-      <p>Hover timed:<span>${metrics.hover}</span></p>
-      <p>Click frequency:<span>${metrics.clicks}</span></p>
-      <p>Idle time:<span>${metrics.idle}</span></p>
+    <div class="tracker">
+      <p class="countdown">${formatCountdown(state.timerRemaining)}</p>
+      <h3 class="tracker-title">Live Tracker</h3>
     </div>
   `;
 }
@@ -221,7 +400,7 @@ function overlayConfig(type, paused) {
       ? {
           icon: renderPausedIcon(),
           title: "Time Paused",
-          subtitle: "How it Works:",
+          subtitle: "How it orks:",
           copy: introCopy.how,
           emphasizeExaggerated: true
         }
@@ -252,7 +431,6 @@ function overlayConfig(type, paused) {
 function renderPausedIcon() {
   return `
     <div class="modal-icon-circle paused-figma-icon" aria-hidden="true">
-      <img class="paused-figma-icon-circle" src="${ASSETS.pausedIconCircle}" alt="" />
       <img class="paused-figma-icon-hourglass" src="${ASSETS.pausedIconHourglass}" alt="" />
     </div>
   `;
@@ -306,11 +484,39 @@ function renderOverlay(type, paused) {
   `;
 }
 
+function renderVisualizationLayer() {
+  return `
+    <section class="viz-layer" aria-label="AI biometrics visualization">
+      <div id="viz-canvas" class="viz-canvas" role="img" aria-label="AI biometrics visualization"></div>
+      <p class="drag-tip">Tipp: Click and Drag me!</p>
+      <div class="viz-legend" aria-label="Visualization legend">
+        <h3 class="viz-legend-title">Graph Legend</h3>
+        <div class="viz-legend-group">
+          <h4 class="viz-legend-subtitle">Biometrical Analysis</h4>
+          <div class="viz-legend-line"></div>
+          <div class="viz-legend-bio-grid" data-legend-bio-grid></div>
+        </div>
+        <div class="viz-legend-line"></div>
+        <span class="legend-item">
+          <span class="legend-icon"><img src="./icons/legend/AI_classification.svg" alt="" /></span>
+          AI Classification
+        </span>
+        <span class="legend-item">
+          <span class="legend-icon"><img src="./icons/legend/AI_harm.svg" alt="" /></span>
+          AI Harm
+        </span>
+      </div>
+    </section>
+  `;
+}
+
 function renderTracking() {
   return `
     <section class="screen" data-screen="tracking">
-      ${renderSidebar(state.overlay || "home", false)}
-      ${renderTracker()}
+      <div class="menu-bar">${renderSidebar(state.overlay || "home", false)}</div>
+      <div class="data-viz">${renderVisualizationLayer()}</div>
+      <div class="timer">${renderTracker()}</div>
+      <button class="dev-finish-button" data-action="dev-finish-timer">Finish (dev)</button>
       ${state.overlay ? renderOverlay(state.overlay, true) : ""}
     </section>
   `;
@@ -330,43 +536,77 @@ function renderResults() {
           "But how much trust should we place in these automated assessments?"
         ])}
       </div>
-      <button class="action-button results-button" data-action="view-profile">View your Biometric pROFILE</button>
+      <button class="action-button results-button" data-action="view-profile">Your Biometric Profile</button>
     </section>
   `;
 }
 
 function renderProfile() {
-  const profile = deriveProfile();
+  const profile = state.profile || emptyProfile();
   const metrics = trackerMetrics();
+  const metadata = profileMetadata();
+  const summaryStateClass = state.summaryOpen ? "summary-open" : "summary-closed";
+  const ollamaMessage = state.ollamaStatus === "loading"
+    ? "Generating profile with Ollama..."
+    : state.ollamaError || (state.ollamaStatus === "ready" ? `Generated with ${OLLAMA_CONFIG.model}` : "Profile generation not started");
   return `
     <section class="screen" data-screen="profile">
-      <div class="left-rail"></div>
-      <div class="profile-content">
-        <h1 class="profile-title">Your Profile</h1>
-        <div class="profile-hero"><h2>${profile.personType}</h2></div>
-        <section class="profile-card demographics">
-          <h3 class="card-heading">DemograPHICS</h3>
-          <div class="section-line"></div>
-          <div class="card-copy">${paragraphHtml(profile.demographics)}</div>
-        </section>
-        <section class="profile-card personality">
-          <h3 class="card-heading">Personality</h3>
-          <div class="section-line"></div>
-          <div class="card-copy">${paragraphHtml(profile.personality)}</div>
-        </section>
-        <section class="behaviour-card">
-          <h3 class="card-heading">Behaviour</h3>
-          <div class="section-line"></div>
-          <div class="card-copy">${paragraphHtml(profile.behaviour)}</div>
-        </section>
-        <section class="assessment-card">
-          <h3 class="card-heading">Assessment</h3>
-          <div class="section-line"></div>
-          <div class="card-copy">${paragraphHtml(profile.assessment)}</div>
-        </section>
-        <button class="sheet-button export" data-action="export-pdf">Export PDF</button>
-        <button class="sheet-button reexplore" data-action="re-explore"><span class="icon-inline">&#8635;</span>Re-explore</button>
-        ${state.exportOpen ? renderExportPanel(profile, metrics) : ""}
+      <div class="menu-bar">${renderSidebar(state.overlay || "home", false)}</div>
+      <div class="data-viz">
+        <div class="profile-content ${summaryStateClass}">
+          <div class="profile-frame-decor" aria-hidden="true">
+            <span class="profile-frame-line top"></span>
+            <span class="profile-frame-line hero-rule"></span>
+            <span class="profile-frame-line bottom"></span>
+            <span class="profile-frame-line center"></span>
+            <span class="profile-frame-line right"></span>
+            <span class="profile-frame-line divider"></span>
+          </div>
+          <h1 class="profile-title">"Your Profile</h1>
+          <p class="ollama-status" role="status">${escapeHtml(ollamaMessage)}</p>
+          <div class="profile-hero">
+            ${cornerMarkersHtml()}
+            <img class="profile-hero-icon" src="./Your_profile/yourprofile_icon.svg" alt="" />
+            <h2>"${profile.personType}"</h2>
+          </div>
+          <div class="profile-lower-row">
+            <section class="profile-panel demographics">
+              <div class="profile-image">${cornerMarkersHtml()}<img src="./Your_profile/demographic_icon.svg" alt="" /></div>
+              <h3 class="profile-heading">DemograPHICS</h3>
+              <div class="section-line"></div>
+              <div class="profile-description">${profileRowsHtml(profile.demographics)}</div>
+            </section>
+            <section class="profile-panel personality">
+              <div class="profile-image">${cornerMarkersHtml()}<img src="./Your_profile/personality_icon.svg" alt="" /></div>
+              <h3 class="profile-heading">Personality</h3>
+              <div class="section-line"></div>
+              <div class="profile-description">${profileRowsHtml(profile.personality)}</div>
+            </section>
+          </div>
+          <div class="profile-right-column">
+            <section class="profile-panel behaviour">
+              <div class="profile-image">${cornerMarkersHtml()}<img src="./Your_profile/behavior_icon.svg" alt="" /></div>
+              <h3 class="profile-heading">Behaviour</h3>
+              <div class="section-line"></div>
+              <div class="profile-description">${profileRowsHtml(profile.behaviour)}</div>
+            </section>
+            <section class="profile-panel assessment">
+              <h3 class="profile-heading">Final Assessment</h3>
+              <div class="section-line"></div>
+              <div class="profile-description">${paragraphHtml(profile.assessment)}</div>
+            </section>
+          </div>
+          <button class="sheet-button export" data-action="export-pdf">Export PDF</button>
+          <button class="sheet-button reexplore" data-action="re-explore"><span class="icon-inline">&#8635;</span>Re-explore</button>
+          <div class="profile-footer" aria-label="Profile metadata">
+            <div class="profile-meta date"><strong>DATE</strong><i aria-hidden="true"></i><span>(${metadata.date})</span></div>
+            <div class="profile-meta time"><strong>TIME</strong><i aria-hidden="true"></i><span>(${metadata.time})</span></div>
+            <div class="profile-meta user-number"><strong>USER NR.</strong><i aria-hidden="true"></i><span>(${metadata.userNumber})</span></div>
+          </div>
+          ${state.exportOpen ? renderExportPanel(profile, metrics) : ""}
+        </div>
+      </div>
+      <div class="timer">
         ${
           state.summaryOpen
             ? `<section class="summary-box">
@@ -388,15 +628,31 @@ function renderProfile() {
               </button>`
         }
       </div>
+      ${state.ollamaStatus === "loading" ? `
+        <div class="profile-loading" role="status" aria-live="polite">
+          <span class="loading-ring" aria-hidden="true"></span>
+          <p>Generating your profile...</p>
+        </div>
+      ` : ""}
+      ${state.ollamaStatus === "loading" ? "" : `
+        <div class="profile-edge-block top" aria-hidden="true"></div>
+        <div class="profile-edge-block bottom" aria-hidden="true"></div>
+      `}
+      ${state.overlay ? renderOverlay(state.overlay, false) : ""}
     </section>
   `;
 }
 
 async function sendSummaryExport(email, summary) {
   if (!EXPORT_SERVICE_URL) {
+    const subject = encodeURIComponent("My AI Profile");
+    const body = encodeURIComponent(
+      `${PROJECT_EMAIL_INTRO}\n\nYour interaction analysis:\n${summary}\n\nA PDF can be saved from the browser print dialog and attached to this email.`
+    );
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
     return {
-      ok: false,
-      message: "Direct PDF email sending needs a configured export service URL."
+      ok: true,
+      message: ""
     };
   }
 
@@ -434,7 +690,9 @@ async function sendSummaryExport(email, summary) {
 function renderFree() {
   return `
     <section class="screen" data-screen="free">
-      ${renderSidebar(state.overlay || "home", true)}
+      <div class="menu-bar">${renderSidebar(state.overlay || "home", true)}</div>
+      <div class="data-viz">${renderVisualizationLayer()}</div>
+      <div class="timer"></div>
       <button class="action-button start-new" data-action="restart">START A NEW EXPERIENCE</button>
       ${state.overlay ? renderOverlay(state.overlay, false) : ""}
     </section>
@@ -456,7 +714,45 @@ function render() {
     app.innerHTML = renderFree();
   }
 
+  applyProfileLayout();
   bindDynamicEvents();
+  mountVisualization();
+}
+
+async function mountVisualization() {
+  const host = app.querySelector("#viz-canvas");
+  if (!host) {
+    return;
+  }
+
+  if (host.dataset.vizMounted === "loading" || host.dataset.vizMounted === "true") {
+    return;
+  }
+
+  if (typeof window.renderForceGraph !== "function" || typeof window.d3 === "undefined") {
+    host.dataset.vizMounted = "error";
+    return;
+  }
+
+  host.dataset.vizMounted = "loading";
+  try {
+    await window.renderForceGraph(host, { dataUrl: VIZ_DATA_SRC });
+    host.dataset.vizMounted = "true";
+  } catch (_error) {
+    host.dataset.vizMounted = "error";
+  }
+}
+
+function unlockIntroCta(key) {
+  const copy = app.querySelector(`[data-scroll-key="${key}"]`);
+  const button = app.querySelector(`[data-scroll-key="${key}"] ~ .intro-cta`);
+  if (!button) {
+    return;
+  }
+
+  copy.classList.add("read");
+  button.disabled = false;
+  button.classList.remove("disabled", "ghost-disabled");
 }
 
 function bindDynamicEvents() {
@@ -466,7 +762,7 @@ function bindDynamicEvents() {
       const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 4;
       if (atBottom && !state.introRead[key]) {
         state.introRead[key] = true;
-        render();
+        unlockIntroCta(key);
       }
     });
   });
@@ -489,10 +785,19 @@ async function handleAction(event) {
     return;
   }
 
+  // TEMP dev-only shortcut to skip the countdown while building the site; remove before launch.
+  if (action === "dev-finish-timer") {
+    stopTicker();
+    state.timerRemaining = 0;
+    state.metrics.active = false;
+    state.screen = "results";
+    state.overlay = null;
+    render();
+    return;
+  }
+
   if (action === "sidebar-home") {
-    if (state.screen === "tracking") {
-      state.overlay = "home";
-    } else if (state.screen === "free") {
+    if (state.screen === "tracking" || state.screen === "free" || state.screen === "profile") {
       state.overlay = "home";
     }
     render();
@@ -520,10 +825,14 @@ async function handleAction(event) {
   if (action === "view-profile") {
     stopTicker();
     state.screen = "profile";
+    state.profile = emptyProfile();
+    state.ollamaStatus = "loading";
+    state.ollamaError = "";
     state.summaryOpen = false;
     state.exportOpen = false;
     state.exportNotice = "";
     render();
+    generateProfile();
     return;
   }
 
@@ -587,6 +896,11 @@ function resetExperience() {
   state.summaryOpen = false;
   state.exportOpen = false;
   state.exportNotice = "";
+  state.sessionStartedAt = null;
+  state.sessionNumber = "001";
+  state.profile = null;
+  state.ollamaStatus = "idle";
+  state.ollamaError = "";
   state.introRead.profile = false;
   state.introRead.how = false;
   state.timerRemaining = EXPERIENCE_MS;
@@ -597,6 +911,8 @@ function startExperience() {
   state.screen = "tracking";
   state.overlay = null;
   state.timerRemaining = EXPERIENCE_MS;
+  state.sessionStartedAt = new Date();
+  state.sessionNumber = String(Math.floor(100 + Math.random() * 900));
   state.metrics = createMetrics();
   state.metrics.active = true;
   state.lastTick = performance.now();
@@ -646,19 +962,11 @@ function stopTicker() {
 }
 
 function updateTrackerValues() {
-  const tracker = app.querySelector(".tracker-copy");
   const countdown = app.querySelector(".countdown");
-  if (!tracker || !countdown) {
+  if (!countdown) {
     return;
   }
-  const metrics = trackerMetrics();
   countdown.textContent = formatCountdown(state.timerRemaining);
-  tracker.innerHTML = `
-    <p>Mouse speed:<span>${metrics.speed}</span></p>
-    <p>Hover timed:<span>${metrics.hover}</span></p>
-    <p>Click frequency:<span>${metrics.clicks}</span></p>
-    <p>Idle time:<span>${metrics.idle}</span></p>
-  `;
 }
 
 function trackPointer(event) {

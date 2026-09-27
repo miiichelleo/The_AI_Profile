@@ -1,47 +1,120 @@
-:root {
-  --bg: #000;
-  --fg: #fff;
-  --muted: #ccc;
-  --rail: #272727;
-  --button-off: #575757;
-  --button-text: #222;
-  --card-shadow: #fff;
-  --modal-w: 994px;
-  --modal-h: 726px;
-  --stage-w: 1512;
-  --stage-h: 982;
-  --stage-scale: 1;
-  --tracker-shift: 0px;
-  --screen-gutter: 0px;
-  --profile-shift: 0px;
-  --overlay-shift-x: 34px;
-  --overlay-shift-y: 10px;
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("./fonts/Space-Grotesk-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("./fonts/Space-Grotesk-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("./fonts/Space-Grotesk-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("./fonts/Space-Mono-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Mono";
+  src: url("./fonts/Space-Mono-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans";
+  src: url("./fonts/Roboto-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans";
+  src: url("./fonts/Roboto-Italic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Google Sans";
+  src: url("./fonts/Roboto-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nudica Mono";
+  src: url("./fonts/Space-Mono-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+html {
   color-scheme: dark;
 }
 
+/* base: shared colors, reset styles, and default typography */
+
+/* universal sizing: makes widths and heights include padding and borders */
 * {
   box-sizing: border-box;
 }
 
-html,
-body {
+/* page canvas: removes browser spacing and fills the viewport */
+html {
   margin: 0;
-  min-height: 100%;
-  background: var(--bg);
+  min-height: 100vh;
+  background: #000;
 }
 
+/* body canvas: main black background behind every screen */
 body {
+  margin: 0;
+  min-height: 100vh;
+  background: #000;
+}
+
+/* body typography: global type treatment for the project */
+body {
+  background-color: black;
   overflow: hidden;
   font-family: "Nudica Mono", "Space Mono", "Courier New", monospace;
   text-transform: uppercase;
-  color: var(--fg);
+  color: #fff;
 }
 
-button,
+/* button typography: keeps all buttons consistent with the app font */
+button {
+  font: inherit;
+}
+
+/* link typography: keeps links consistent with the app font */
 a {
   font: inherit;
 }
 
+/* button reset: removes default browser button chrome */
 button {
   border: 0;
   background: none;
@@ -50,116 +123,177 @@ button {
   cursor: pointer;
 }
 
+/* main layout: fixed application frame */
+
+/* viewport wrapper: full browser viewport container */
 .viewport {
   display: grid;
   min-height: 100vh;
-  justify-items: center;
-  align-items: center;
+  justify-items: stretch;
+  align-items: stretch;
   overflow: hidden;
 }
 
+/* stage shell: outer layer that holds the interactive app */
 #stage-shell {
   position: relative;
-  width: calc(var(--stage-w) * 1px * var(--stage-scale));
-  height: calc(var(--stage-h) * 1px * var(--stage-scale));
+  width: 100vw;
+  height: 100vh;
 }
 
+/* stage: dynamic app mount controlled by script.js */
 .stage {
   position: relative;
-  width: 1512px;
-  height: 982px;
-  transform: scale(var(--stage-scale));
-  transform-origin: top left;
+  width: 100vw;
+  height: 100vh;
   overflow: visible;
-  background: var(--bg);
+  background: #000;
 }
 
+/* main element: full-screen coordinate plane for layout */
+main {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* screen: one full-screen app state such as intro, tracking, or profile */
 .screen {
   position: absolute;
   inset: 0;
-  background: var(--bg);
+  background: #000;
 }
 
-.left-rail {
-  position: absolute;
-  inset: 0 auto 0 calc(0px - var(--screen-gutter));
-  width: 72px;
-  border-right: 3px solid var(--rail);
+/* menu: fixed left navigation column */
+
+/* menu-bar: left fixed area for home/how/about navigation */
+.menu-bar {
+  position: fixed;
+  left: 0;
+  width: 3rem;
+  height: 100vh;
   z-index: 1;
 }
 
-.nav-highlight {
-  position: absolute;
-  left: calc(2px - var(--screen-gutter));
-  width: 67px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.2);
+/* data-viz: fixed visualization area */
+
+/* data-viz: graph area behind menu and timer */
+.data-viz {
+  position: fixed;
+  left: 0rem;
+  width: 90rem;
+  height: 100vh;
+  z-index: 0;
+}
+
+/* timer: fixed right information column */
+
+/* timer: right fixed area for countdown and tracking metrics */
+.timer {
+  position: fixed;
+  right: 0;
+  width: 15rem;
+  height: 100vh;
+  z-index: 1;
   pointer-events: none;
-  z-index: 2;
 }
 
-.nav-highlight.home {
-  top: 3px;
-  height: 92px;
+/* timer children: re-enable clicks on the actual widgets, letting empty space pass clicks through */
+.timer > * {
+  pointer-events: auto;
 }
 
-.nav-highlight.how {
-  top: 283px;
-  height: 208px;
+/* menu content: navigation rail, icon buttons, and vertical links */
+
+/* left-rail: dark vertical divider behind the navigation */
+.left-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 48px;
+  height: 100vh;
+  border-right: 3px solid #272727;
+  z-index: 1;
 }
 
-.nav-highlight.about {
-  top: 830px;
-  height: 151px;
-}
-
+/* home-button: small home icon in the left menu */
 .home-button {
   position: absolute;
-  left: calc(14px - var(--screen-gutter));
-  top: 27px;
+  left: 2px;
+  top: 3px;
   width: 44px;
-  height: 46px;
+  height: 92px;
+  display: grid;
+  place-items: start center;
+  padding-top: 24px;
+  border-radius: 5px;
   z-index: 3;
 }
 
+.home-button:hover,
+.home-button:focus-visible,
+.vertical-link:hover,
+.vertical-link:focus-visible {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* home-button large: larger home icon used after the timed experience */
 .home-button.large {
-  left: calc(18px - var(--screen-gutter));
+  left: 2px;
   width: 70px;
   height: 73px;
 }
 
-.home-button img,
-.intro-icon img {
+/* home-button image: fills the home button box */
+.home-button img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 28px;
+  height: 30px;
 }
 
+/* intro icon image: fills the intro icon box */
+.intro-icon img {
+  display: block;
+  width: auto;
+  height: auto;
+}
+
+/* vertical-link: rotated navigation text in the menu */
 .vertical-link {
   position: absolute;
-  left: calc(35px - var(--screen-gutter));
+  left: 2px;
+  width: 44px;
   display: block;
-  color: var(--muted);
-  font-size: 20px;
+  color: #ccc;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 14px;
   letter-spacing: 0.04em;
   line-height: 1;
   text-align: center;
-  transform: translateX(-50%) rotate(180deg);
+  transform: rotate(180deg);
   transform-origin: center;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   white-space: nowrap;
+  border-radius: 5px;
   z-index: 3;
 }
 
+/* vertical-link how: position of the just the  menu label */
 .vertical-link.how {
-  top: 308px;
+  top: 283px;
+  height: 208px;
 }
 
+/* vertical-link about: position of the About menu label */
 .vertical-link.about {
-  top: 869px;
+  top: 604px;
+  height: 124px;
 }
 
+/* intro and modal basics: shared text, icons, lines, and buttons */
+
+/* intro-icon: network icon shown on the first intro screen */
 .intro-icon {
   position: absolute;
   left: 340px;
@@ -168,77 +302,84 @@ button {
   height: 62px;
 }
 
-.question-icon,
-.result-icon,
-.modal-icon-circle {
+/* question-icon: circular question mark used on the how-it-works intro */
+.question-icon {
   position: absolute;
   display: grid;
   place-items: center;
-  color: var(--fg);
+  color: #fff;
   z-index: 6;
-}
-
-.question-icon {
   left: 339px;
   top: 231px;
-}
-
-.modal-icon-circle {
-  left: calc(339px + var(--overlay-shift-x));
-  top: calc(231px + var(--overlay-shift-y));
   width: 55px;
   height: 55px;
-  border: 1px solid var(--fg);
-  border-radius: 50%;
+  border: 1px solid #fff;
+  border-radius: 50px;
   font-size: 32px;
   line-height: 1;
 }
 
-.modal-icon-circle.info {
-  font-size: 26px;
+/* modal-icon-circle: circular icon container inside overlays */
+.modal-icon-circle {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  z-index: 6;
+  left: 756px;
+  top: 491px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #fff;
+  border-radius: 50px;
+  font-size: 20px;
+  line-height: 1;
+  transform: translate(-280px, -170px);
 }
 
+/* modal-icon-circle info: smaller letter i inside the About overlay */
+.modal-icon-circle.info {
+  font-size: 18px;
+}
+
+/* paused figma icon: removes circle border, matches intro/result icon size, centered above the modal line */
 .modal-icon-circle.paused-figma-icon {
   border: 0;
   overflow: visible;
+  width: 55px;
+  height: 55px;
+  transform: translate(-289.5px, -190px);
 }
 
-.paused-figma-icon-circle,
+/* paused icon hourglass: svg already includes its own circle, fill the container */
 .paused-figma-icon-hourglass {
   position: absolute;
   display: block;
-}
-
-.paused-figma-icon-circle {
   inset: 0;
   width: 55px;
   height: 55px;
 }
 
-.paused-figma-icon-hourglass {
-  left: 18px;
-  top: 12px;
-  width: 19.57px;
-  height: 30.29px;
-}
-
+/* result-icon: circular check icon used on the completion screen */
 .result-icon {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  z-index: 6;
   left: 339px;
   top: 231px;
   width: 55px;
   height: 55px;
-  border: 1px solid var(--fg);
-  border-radius: 50%;
+  border: 1px solid #fff;
+  border-radius: 50px;
 }
 
-.result-icon::before,
-.result-icon::after {
+/* result-icon first stroke: short diagonal part of the check mark */
+.result-icon::before {
   content: "";
   position: absolute;
-  background: var(--fg);
-}
-
-.result-icon::before {
+  background: #fff;
   width: 12px;
   height: 2px;
   left: 15px;
@@ -246,7 +387,11 @@ button {
   transform: rotate(45deg);
 }
 
+/* result-icon second stroke: long diagonal part of the check mark */
 .result-icon::after {
+  content: "";
+  position: absolute;
+  background: #fff;
   width: 21px;
   height: 2px;
   left: 22px;
@@ -254,67 +399,67 @@ button {
   transform: rotate(-45deg);
 }
 
-.intro-line,
-.modal-line,
-.section-line,
-.summary-line,
-.tracker-line {
+/* intro-line: short divider under the intro icon */
+.intro-line {
   position: absolute;
-  background: var(--fg);
-}
-
-.intro-line,
-.modal-line {
+  background: #fff;
   width: 55px;
   height: 1px;
   z-index: 6;
-}
-
-.intro-line {
   left: 344px;
   top: 307px;
 }
 
+/* modal-line: short divider under the modal icon */
 .modal-line {
-  left: calc(344px + var(--overlay-shift-x));
-  top: calc(307px + var(--overlay-shift-y));
+  position: absolute;
+  background: #fff;
+  width: 36px;
+  height: 1px;
+  z-index: 6;
+  left: 756px;
+  top: 491px;
+  transform: translate(-280px, -122px);
 }
 
+/* screen-title: main heading on intro and result screens */
 .screen-title {
   position: absolute;
   left: 344px;
   top: 324px;
   margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
   font-size: 40px;
   font-weight: 400;
   letter-spacing: 0.08em;
   line-height: 1.2;
 }
 
+/* screen-subtitle: secondary heading under the main screen title */
 .screen-subtitle {
   position: absolute;
   left: 344px;
   top: 393px;
   margin: 0;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
   font-size: 24px;
   font-weight: 400;
   letter-spacing: 0.06em;
   line-height: 1.2;
 }
 
-.intro-copy,
-.results-copy,
-.modal-copy {
+/* intro-copy: scrollable body text on intro screens */
+.intro-copy {
   position: absolute;
   left: 344px;
   width: 826px;
-  color: var(--muted);
+  color: #ccc;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
   font-size: 14px;
+  font-weight: 300;
   letter-spacing: 0.05em;
   line-height: 20px;
-}
-
-.intro-copy {
+  text-transform: none;
   top: 459px;
   height: 200px;
   padding: 4px 0;
@@ -322,78 +467,411 @@ button {
   scrollbar-width: none;
 }
 
-.intro-copy::-webkit-scrollbar,
+/* results-copy: body text on the interaction complete screen */
+.results-copy {
+  position: absolute;
+  left: 344px;
+  width: 826px;
+  color: #ccc;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  line-height: 20px;
+  text-transform: none;
+}
+
+/* modal-copy: body text inside modal overlays */
+.modal-copy {
+  position: absolute;
+  left: 344px;
+  width: 826px;
+  color: #ccc;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  line-height: 20px;
+  text-transform: none;
+}
+
+/* intro screen title alignment: keeps intro headings left aligned */
+.screen[data-screen^="intro-"] .intro-icon {
+  top: 148px;
+}
+
+.screen[data-screen^="intro-"] .question-icon {
+  top: 151px;
+}
+
+.screen[data-screen^="intro-"] .intro-line {
+  top: 227px;
+}
+
+.screen[data-screen^="intro-"] .screen-title {
+  top: 244px;
+  text-align: left;
+}
+
+/* intro screen subtitle alignment: keeps intro subtitles left aligned */
+.screen[data-screen^="intro-"] .screen-subtitle {
+  top: 313px;
+  text-align: left;
+}
+
+/* intro screen copy alignment: keeps intro paragraphs left aligned */
+.screen[data-screen^="intro-"] .intro-copy {
+  top: 379px;
+  text-align: left;
+}
+
+/* intro cta: positions the intro action button */
+.screen[data-screen^="intro-"] .intro-cta {
+  left: 344px;
+  top: 633px;
+}
+
+/* intro copy scrollbar: hides browser scrollbar in intro text */
+.intro-copy::-webkit-scrollbar {
+  display: none;
+}
+
+/* modal copy scrollbar: hides browser scrollbar in modal text */
 .modal-copy::-webkit-scrollbar {
   display: none;
 }
 
-.intro-copy p,
-.results-copy p,
-.modal-copy p,
-.tracker-copy p,
-.summary-copy p,
-.card-copy p {
+/* intro paragraphs: spacing between intro copy lines */
+.intro-copy p {
   margin: 0 0 20px;
 }
 
-.intro-copy p:last-child,
-.results-copy p:last-child,
-.modal-copy p:last-child,
-.tracker-copy p:last-child,
-.summary-copy p:last-child,
-.card-copy p:last-child {
+/* results paragraphs: spacing between completion copy lines */
+.results-copy p {
+  margin: 0 0 20px;
+}
+
+/* modal paragraphs: spacing between modal copy lines */
+.modal-copy p {
+  margin: 0 0 20px;
+}
+
+/* summary paragraphs: base spacing for summary rows */
+.summary-copy p {
+  margin: 0 0 20px;
+}
+
+/* intro last paragraph: removes extra space after final intro paragraph */
+.intro-copy p:last-child {
   margin-bottom: 0;
 }
 
-.intro-copy strong,
-.modal-copy strong {
-  color: var(--fg);
+.intro-copy:not(.read) .intro-final-sentence {
+  opacity: 0.45;
+}
+
+.intro-copy:not(.read) {
+  mask-image: linear-gradient(to bottom, #000 0, #000 65%, transparent 100%);
+}
+
+/* results last paragraph: removes extra space after final result paragraph */
+.results-copy p:last-child {
+  margin-bottom: 0;
+}
+
+/* modal last paragraph: removes extra space after final modal paragraph */
+.modal-copy p:last-child {
+  margin-bottom: 0;
+}
+
+/* summary last row: removes extra space after final summary metric */
+.summary-copy p:last-child {
+  margin-bottom: 0;
+}
+
+/* intro emphasis: highlights important intro words */
+.intro-copy strong {
+  color: #fff;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
 
+/* modal emphasis: highlights important modal words */
+.modal-copy strong {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+/* action-button: shared small white action button */
 .action-button {
   position: absolute;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 36px;
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--fg);
-  color: var(--button-text);
+  background: #000;
+  color: #fff;
   font-size: 12px;
   letter-spacing: 0.06em;
 }
 
+/* disabled action-button: muted button when action is not available */
 .action-button.disabled {
-  background: var(--button-off);
-  color: var(--button-text);
+  background: #000;
+  color: #ccc;
+  border-color: #ccc;
   cursor: default;
 }
 
+/* ghost disabled button: softer disabled state for the first intro button */
 .action-button.ghost-disabled {
-  background: rgba(204, 204, 204, 0.4);
+  background: #000;
+  border-color: #ccc;
 }
 
+/* active action buttons: invert the black panel treatment on interaction */
+.action-button:not(:disabled):is(:hover, :focus-visible, :active),
+.sheet-button:is(:hover, :focus-visible, :active) {
+  background: #fff;
+  color: #222;
+}
+
+/* data-viz content: force graph, legend, and tooltip */
+
+/* viz-layer: full visualization layer inside the data-viz column */
+.viz-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* viz-canvas: host element where the D3 force graph is mounted */
+.viz-canvas {
+  position: relative;
+  width: 1440px;
+  height: 982px;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* viz svg: makes the generated graph fill its canvas cleanly */
+.viz-canvas svg {
+  display: block;
+}
+
+/* drag tip: small italic instruction over the graphic canvas */
+.drag-tip {
+  position: absolute;
+  left: 64px;
+  top: 24px;
+  width: 188px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  text-transform: none;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* viz-legend: floating explanation box for graph node colors */
+.viz-legend {
+  position: absolute;
+  left: 64px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 268px;
+  padding: 20px 18px 26px;
+  border: 1px solid #fff;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  z-index: 2;
+}
+
+/* viz-tooltip: hover tooltip for graph nodes */
+.viz-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  max-width: 320px;
+  padding: 10px 12px;
+  border: 1px solid rgba(204, 204, 204, 0.55);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.92);
+  color: #fff;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* viz-tooltip paragraphs: adds breathing room between tooltip lines */
+.viz-tooltip p {
+  margin: 0 0 8px;
+}
+
+.viz-tooltip p:last-child {
+  margin-bottom: 0;
+}
+
+/* viz legend title: heading inside the legend box */
+.viz-legend-title {
+  margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* viz legend line: divider under the legend title */
+.viz-legend-line {
+  width: 230px;
+  height: 1px;
+  background: rgba(204, 204, 204, 0.82);
+}
+
+/* viz legend group: the biometrical analysis block (subtitle, divider, and dot grid) */
+.viz-legend-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* viz legend subtitle: heading for the biometrical analysis group */
+.viz-legend-subtitle {
+  margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* viz legend bio grid: two-column layout listing every biometric category */
+.viz-legend-bio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+/* legend item bio: tighter row spacing for the biometric category list */
+.viz-legend .legend-item-bio {
+  gap: 8px;
+}
+
+/* legend dot: color swatch for each biometric category */
+.viz-legend .legend-dot {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 50px;
+  display: inline-block;
+}
+
+/* legend item: one color key row in the graph legend */
+.viz-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #ccc;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  text-transform: none;
+  white-space: normal;
+}
+
+/* legend icon: fixed-width column so every row's label starts at the same x position */
+.viz-legend .legend-icon {
+  width: 34px;
+  flex: 0 0 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* legend icon image: scales each legend svg to fit its icon column */
+.viz-legend .legend-icon img {
+  display: block;
+  max-width: 34px;
+  height: auto;
+}
+
+/* TEMP dev-only button: lets you skip the countdown while building the site; remove before launch */
+.dev-finish-button {
+  position: fixed;
+  left: 756px;
+  bottom: 16px;
+  transform: translateX(-50px);
+  padding: 8px 14px;
+  border: 1px dashed #ff5656;
+  border-radius: 2px;
+  background: rgba(255, 86, 86, 0.15);
+  color: #ff5656;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  z-index: 10;
+}
+
+/* timer content: countdown and live interaction metrics */
+
+/* tracker: right-side card around countdown and metric rows */
 .tracker {
   position: absolute;
-  left: calc(1284px + var(--tracker-shift));
-  top: 53px;
+  right: 0;
+  top: 24px;
   width: 228px;
-  height: 327px;
-  border: 1px solid var(--fg);
+  height: 112px;
+  border: 1px solid #fff;
   border-radius: 2px;
+  z-index: 1;
 }
 
+/* tracker title: Live Tracker label above the countdown */
+.tracker-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20px;
+  margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* countdown: large remaining-time number inside the tracker */
 .countdown {
   position: absolute;
-  left: 50%;
-  top: 68px;
-  transform: translateX(-50%);
+  left: 10px;
+  top: 46px;
+  transform: none;
   width: 200px;
   margin: 0;
-  color: var(--fg);
+  color: #fff;
   font-size: 40px;
   font-weight: 400;
   letter-spacing: 0.08em;
@@ -402,45 +880,13 @@ button {
   z-index: 2;
 }
 
-.tracker-title {
-  position: absolute;
-  left: calc(1344px + var(--tracker-shift));
-  top: 68px;
-  width: 228px;
-  margin: 0;
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.tracker-line {
-  left: calc(1284px + var(--tracker-shift));
-  top: 98px;
-  width: 228px;
-  height: 1px;
-}
-
-.tracker-copy {
-  position: absolute;
-  left: calc(1305px + var(--tracker-shift));
-  top: 126px;
-  width: 182px;
-  color: var(--fg);
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  line-height: 1.5;
-}
-
-.tracker-copy span,
+/* summary value text: muted numeric values inside the profile summary */
 .summary-copy span {
-  color: var(--muted);
+  color: #ccc;
   white-space: nowrap;
 }
 
-.tracker-copy p,
+/* summary metric row: aligns each summary label with its value */
 .summary-copy p {
   display: flex;
   align-items: flex-start;
@@ -448,10 +894,9 @@ button {
   gap: 24px;
 }
 
-.tracker-copy p {
-  margin-bottom: 36px;
-}
+/* modal: paused information overlays */
 
+/* modal backdrop: dark translucent layer behind open overlays */
 .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -460,307 +905,343 @@ button {
   z-index: 4;
 }
 
+/* modal box: fixed-size overlay card frame */
 .modal-box {
   position: absolute;
-  left: calc(257px + var(--overlay-shift-x));
-  top: calc(128px + var(--overlay-shift-y));
-  width: var(--modal-w);
-  height: var(--modal-h);
+  left: 756px;
+  top: 491px;
+  width: 660px;
+  height: 482px;
+  transform: translate(-330px, -241px);
   z-index: 5;
 }
 
+/* modal box shadow plate: white offset block behind the modal */
 .modal-box::before {
   content: "";
   position: absolute;
-  left: 10px;
-  top: 14px;
-  width: 100%;
-  height: 100%;
+  left: 8px;
+  top: 10px;
+  width: 660px;
+  height: 482px;
   border-radius: 2px;
-  background: var(--card-shadow);
+  background: transparent;
   z-index: -1;
   pointer-events: none;
 }
 
-.modal-panel,
-.profile-hero,
-.profile-card,
-.behaviour-card,
-.assessment-card,
-.summary-box,
-.summary-tab,
-.tracker {
-  box-shadow: 10px 14px 0 0 var(--card-shadow);
-  position: absolute;
-  z-index: 1;
-}
-
-.sheet-button,
-.results-button {
-  position: absolute;
-  z-index: 1;
-}
-
-.profile-hero,
-.profile-card,
-.behaviour-card,
-.assessment-card {
-  isolation: isolate;
-}
-
+/* modal panel: black foreground panel inside the modal frame */
 .modal-panel {
+  position: absolute;
   inset: 0;
-  border: 1px solid var(--fg);
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--bg);
+  background: #000;
+  box-shadow: 8px 10px 0 0 transparent;
+  z-index: 1;
 }
 
+/* modal title: large heading inside overlays */
 .modal-title {
   position: absolute;
-  left: calc(344px + var(--overlay-shift-x));
-  top: calc(324px + var(--overlay-shift-y));
+  left: 756px;
+  top: 491px;
   margin: 0;
-  font-size: 40px;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 28px;
   letter-spacing: 0.08em;
   line-height: 1.2;
   z-index: 6;
+  transform: translate(-280px, -107px);
 }
 
+/* modal subtitle: smaller context label inside overlays */
 .modal-subtitle {
   position: absolute;
-  left: calc(344px + var(--overlay-shift-x));
-  top: calc(414px + var(--overlay-shift-y));
+  left: 756px;
+  top: 491px;
   margin: 0;
-  font-size: 17px;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 12px;
   letter-spacing: 0.06em;
   line-height: 1.2;
   z-index: 6;
+  transform: translate(-280px, -50px);
 }
 
+/* modal copy: scrollable text area inside overlays */
 .modal-copy {
-  left: calc(344px + var(--overlay-shift-x));
-  top: calc(459px + var(--overlay-shift-y));
-  max-height: 340px;
+  left: 756px;
+  top: 491px;
+  width: 540px;
+  max-height: 180px;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 6;
+  font-size: 10px;
+  line-height: 16px;
+  transform: translate(-280px, -18px);
 }
 
+/* modal close: x button in the modal corner */
 .modal-close {
   position: absolute;
-  left: calc(1185px + var(--overlay-shift-x));
-  top: calc(142px + var(--overlay-shift-y));
-  width: 36px;
-  height: 36px;
+  left: 756px;
+  top: 491px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
-  font-size: 26px;
-  color: var(--fg);
+  font-size: 24px;
+  color: #fff;
   z-index: 7;
+  transform: translate(286px, -226px);
 }
 
+/* results: interaction complete screen */
+
+/* results copy: text block on the completion screen */
 .results-copy {
   top: 459px;
 }
 
+/* profile: generated biometric profile screen */
+
+/* profile title: main heading on the profile screen */
 .profile-title {
   position: absolute;
   left: 166px;
-  top: 103px;
+  top: 40px;
   margin: 0;
-  font-size: 48px;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 32px;
   font-weight: 400;
   letter-spacing: 0.08em;
   line-height: 1.2;
 }
 
-.profile-hero {
-  left: 167px;
-  top: 209px;
-  width: 753px;
-  height: 185px;
-  border: 1px solid var(--fg);
-  border-radius: 2px;
-  background: var(--bg);
+/* ollama status: small model connection state beside the profile heading */
+.ollama-status {
+  position: absolute;
+  left: 430px;
+  top: 48px;
+  width: 480px;
+  margin: 0;
+  color: #ccc;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
+/* profile loading: blocks placeholder content until Ollama returns a result */
+.profile-loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 25px;
+  background: rgba(0, 0, 0, 0.94);
+  color: #fff;
+  z-index: 10;
+}
+
+.profile-loading p {
+  margin: 0;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.loading-ring {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50px;
+  animation: profile-loading-spin 0.9s linear infinite;
+}
+
+@keyframes profile-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* profile hero: large person-type result card */
+.profile-hero {
+  position: absolute;
+  left: 167px;
+  top: 120px;
+  width: 753px;
+  height: 190px;
+  border: 1px solid #222;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 10px 14px 0 0 transparent;
+  isolation: isolate;
+  z-index: 1;
+}
+
+/* profile hero shadow offset: aligns the decorative card shadow */
 .profile-hero::before {
   inset: 14px -10px -10px 10px;
 }
 
+/* profile hero label: centered person-type text */
 .profile-hero h2 {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   margin: 0;
-  font-size: 40px;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
+  font-size: 32px;
   font-weight: 400;
   letter-spacing: 0.08em;
+  color: #222;
   z-index: 1;
 }
 
-.profile-card,
-.behaviour-card,
-.assessment-card {
-  border: 1px solid var(--fg);
-  border-radius: 2px;
-  background: var(--bg);
-}
-
-.profile-card {
-  top: 507px;
-  width: 348px;
-  height: 385px;
-}
-
-.profile-card.demographics {
+/* profile lower row: container that places demographics and personality side by side */
+.profile-lower-row {
+  position: absolute;
   left: 167px;
+  top: 380px;
+  width: 753px;
+  height: 270px;
+  display: flex;
+  gap: 57px;
 }
 
-.profile-card.personality {
-  left: 572px;
-}
-
-.behaviour-card {
-  left: 996px;
-  top: 258px;
+/* profile right column: container that stacks behaviour above assessment */
+.profile-right-column {
+  position: absolute;
+  left: 0px;
+  top: 120px;
   width: 420px;
-  height: 257px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
-.assessment-card {
-  left: 1002px;
-  top: 559px;
-  width: 418px;
-  height: 326px;
-}
-
-.card-heading {
-  position: absolute;
-  left: 17px;
-  top: 18px;
-  margin: 0;
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  z-index: 1;
-}
-
-.section-line {
-  left: 0;
-  top: 66px;
-  width: 100%;
-  height: 1px;
-  z-index: 1;
-}
-
-.card-copy {
-  position: absolute;
-  left: 17px;
-  top: 98px;
-  width: calc(100% - 34px);
-  font-size: 20px;
-  letter-spacing: 0.06em;
-  line-height: 2.25;
-  z-index: 1;
-}
-
-.card-copy p {
-  margin-bottom: 18px;
-}
-
+/* sheet button: shared profile-screen action button */
 .sheet-button {
-  top: 101px;
+  position: absolute;
+  top: 40px;
   height: 36px;
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--fg);
-  color: var(--button-text);
+  background: #000;
+  color: #fff;
   font-size: 12px;
   letter-spacing: 0.06em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
+/* export button: opens the PDF export panel */
 .sheet-button.export {
   left: 1090px;
   width: 121px;
 }
 
+/* re-explore button: returns from profile to free exploration */
 .sheet-button.reexplore {
   left: 1247px;
   width: 129px;
 }
 
+/* inline icon: small symbol inside the re-explore button */
 .sheet-button .icon-inline {
   margin-right: 8px;
   font-size: 14px;
 }
 
+/* summary box: expanded interaction summary panel */
 .summary-box {
-  right: 39px;
-  top: 25px;
-  width: 320px;
-  height: 208px;
-  border: 1px solid var(--fg);
+  position: absolute;
+  right: 0;
+  top: 200px;
+  width: 287px;
+  height: 200px;
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--bg);
+  background: #000;
+  box-shadow: 10px 14px 0 0 transparent;
+  z-index: 1;
 }
 
+/* summary title: heading inside the expanded summary box */
 .summary-box h3 {
   position: absolute;
   left: 26px;
   top: 9px;
   margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
+/* summary line: divider under the summary title */
 .summary-line {
+  position: absolute;
   left: 0;
   top: 34px;
-  width: 100%;
+  width: 287px;
   height: 1px;
+  background: #fff;
 }
 
+/* summary copy: metric rows inside the summary panel */
 .summary-copy {
   position: absolute;
   left: 26px;
-  top: 52px;
-  width: calc(100% - 52px);
-  font-size: 13px;
-  line-height: 1.15;
+  top: 31px;
+  width: 235px;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 2.9;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
+/* summary paragraph reset: keeps summary rows tightly stacked */
 .summary-copy p {
-  width: 100%;
   margin: 0;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  column-gap: 12px;
   white-space: nowrap;
 }
 
+/* adjacent summary rows: removes extra row spacing */
 .summary-copy p + p {
-  margin-top: 10px;
+  margin-top: 0;
 }
 
+/* summary value display: keeps values inline with labels */
 .summary-copy span {
   display: inline;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-weight: 400;
+  text-transform: none;
 }
 
+/* summary box overflow: clips summary content to the box */
 .summary-box {
   overflow: hidden;
 }
 
+/* summary close: x button inside the expanded summary box */
 .summary-close {
   position: absolute;
-  right: 9px;
-  top: 7px;
+  right: 14px;
+  top: 5px;
   width: 28px;
   height: 28px;
   display: grid;
@@ -768,20 +1249,24 @@ button {
   font-size: 14px;
 }
 
+/* summary tab: collapsed vertical summary handle */
 .summary-tab {
-  right: calc(0px - var(--screen-gutter));
-  top: 25px;
-  width: 81px;
-  height: 191px;
-  border: 1px solid var(--fg);
+  position: absolute;
+  right: 0;
+  top: 200px;
+  width: 40px;
+  height: 240px;
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--bg);
+  background: #000;
   box-shadow: none;
+  z-index: 1;
 }
 
+/* summary tab copy: rotated label container inside the tab */
 .summary-tab .tab-copy {
   position: absolute;
-  left: 13px;
+  left: 10px;
   top: 12px;
   display: flex;
   flex-direction: column;
@@ -789,89 +1274,129 @@ button {
   align-items: center;
 }
 
+/* summary tab label: vertical interaction summary text */
 .summary-tab .tab-label {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  padding-right: 50px;
   font-size: 14px;
   letter-spacing: 0.05em;
 }
 
+/* summary tab arrow: small arrow above the vertical label */
 .summary-tab .tab-arrow {
-  font-size: 18px;
+  font-size: 20px;
+  padding-right: 50px;
+
 }
 
+/* summary open state: profile content when the summary panel is open */
+.profile-content.summary-open {
+  transform: scale(1);
+}
+
+/* summary closed hero position: moves hero down when summary is collapsed */
+.profile-content.summary-closed .profile-hero {
+  top: 140px;
+}
+
+.profile-content.summary-closed .profile-lower-row {
+  top: 400px;
+}
+
+.profile-content.summary-closed .profile-right-column {
+  top: 140px;
+}
+
+/* export: PDF export panel and end-screen actions */
+
+/* results button: opens the generated biometric profile */
 .results-button {
-  left: 372px;
-  top: 713px;
+  position: absolute;
+  left: 344px;
+  top: 580px;
   width: 234px;
+  z-index: 1;
 }
 
+/* export panel: floating email/PDF export card */
 .export-panel {
   position: absolute;
   left: 930px;
   top: 154px;
   width: 430px;
   min-height: 228px;
-  border: 1px solid var(--fg);
+  border: 1px solid #fff;
   border-radius: 2px;
-  background: var(--bg);
-  box-shadow: 10px 14px 0 0 var(--card-shadow);
+  background: #000;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  text-transform: none;
+  box-shadow: 10px 14px 0 0 transparent;
   z-index: 2;
 }
 
+/* export panel title: heading inside the PDF export panel */
 .export-panel h3 {
   position: absolute;
   left: 24px;
   top: 14px;
   margin: 0;
+  font-family: "Space Grotesk", "Nudica Mono", sans-serif;
   font-size: 16px;
   font-weight: 400;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
+/* export line: divider under the export panel title */
 .export-line {
   position: absolute;
   left: 0;
   top: 48px;
-  width: 100%;
+  width: 430px;
   height: 1px;
-  background: var(--fg);
+  background: #fff;
 }
 
+/* export copy: helper text explaining the export action */
 .export-copy {
   position: absolute;
   left: 24px;
   top: 66px;
   width: 382px;
   margin: 0;
-  color: var(--muted);
+  color: #ccc;
   font-size: 13px;
   letter-spacing: 0.05em;
   line-height: 1.5;
 }
 
+/* export input: email field inside the export panel */
 .export-input {
   position: absolute;
   left: 24px;
   top: 116px;
   width: 382px;
   height: 40px;
-  border: 1px solid var(--fg);
+  border: 1px solid #fff;
   border-radius: 2px;
   background: transparent;
-  color: var(--fg);
-  font: inherit;
+  color: #fff;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
   font-size: 14px;
+  font-weight: 400;
   letter-spacing: 0.05em;
   padding: 0 12px;
   text-transform: none;
 }
 
+/* export input placeholder: muted placeholder text inside email field */
 .export-input::placeholder {
-  color: var(--muted);
+  color: #ccc;
   text-transform: none;
 }
 
+/* export actions: row containing send and cancel actions */
 .export-actions {
   position: absolute;
   left: 24px;
@@ -881,42 +1406,495 @@ button {
   align-items: center;
 }
 
+/* export action: send button inside export panel */
 .export-action {
   position: static;
   width: 146px;
 }
 
+/* export cancel: text button that closes the export panel */
 .export-cancel {
-  color: var(--muted);
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  color: #ccc;
   font-size: 12px;
   letter-spacing: 0.06em;
 }
 
+/* export notice: success or error message under export actions */
 .export-notice {
   position: absolute;
   left: 24px;
   top: 214px;
   width: 382px;
   margin: 0;
-  color: var(--muted);
+  color: #ccc;
   font-size: 12px;
   letter-spacing: 0.05em;
   line-height: 1.4;
   text-transform: none;
 }
 
+/* start new: button shown in free exploration mode */
 .start-new {
   left: 1290px;
   top: 40px;
   width: 194px;
 }
 
+/* profile content: fixed coordinate plane for the whole profile screen */
 .profile-content {
   position: absolute;
+  left: 50px;
+  top: 15px;
+  width: 2000px;
+  height: 982px;
+  transform: scale(1);
+  transform-origin: top left;
+}
+
+/* Figma frame decorations: thin structural rules and right-edge white blocks */
+.profile-frame-decor {
+  position: absolute;
   inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.profile-frame-line {
+  position: absolute;
+  display: block;
+}
+
+.profile-frame-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.profile-frame-line.top {
+  left: 72px;
+  top: 109px;
+  width: 1440px;
+}
+
+.profile-frame-line.hero-rule {
+  left: 69px;
+  top: 415px;
+  width: 903px;
+}
+
+.profile-frame-line.bottom {
+  left: 72px;
+  top: 931px;
+  width: 861px;
+}
+
+.profile-frame-line.center {
+  left: 514px;
+  top: 382px;
+  width: 600px;
+  transform: rotate(90deg);
+  transform-origin: left top;
+}
+
+.profile-frame-line.right {
+  left: 933px;
+  top: 0;
+  width: 982px;
+  transform: rotate(90deg);
+  transform-origin: left top;
+}
+
+.profile-frame-line.divider {
+  left: 1449px;
+  top: 0;
+  width: 982px;
+  transform: rotate(90deg);
+  transform-origin: left top;
+}
+
+.profile-edge-block {
+  position: absolute;
+  right: 0;
+  width: 40px;
+  background: #fff;
+  pointer-events: none;
+  z-index: 11;
+}
+
+.profile-edge-block.top {
+  top: 0;
+  height: 109px;
+}
+
+.profile-edge-block.bottom {
+  bottom: 0;
+  height: 51px;
+}
+
+/* black visual panels with white information bands */
+.profile-hero {
+  background: #000;
+  border-color: #fff;
+  box-shadow: none;
+}
+
+.corner-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.corner-marker {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+}
+
+.corner-marker.top-left {
+  left: -4px;
+  top: -4px;
+}
+
+.corner-marker.top-right {
+  right: -4px;
+  top: -4px;
+}
+
+.corner-marker.bottom-left {
+  left: -4px;
+  bottom: -4px;
+}
+
+.corner-marker.bottom-right {
+  right: -4px;
+  bottom: -4px;
+}
+
+.profile-hero-icon {
+  position: absolute;
+  left: 40px;
+  top: 83px;
+  width: 67px;
+  height: 46px;
+  transform: translateY(-23px);
+}
+
+.profile-hero h2 {
+  left: 118px;
+  right: 24px;
+  color: #fff;
+  text-align: left;
+  place-items: center start;
+}
+
+.profile-title {
+  left: 226px;
+  top: 63px;
+  font-size: 64px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ollama-status {
+  left: 700px;
+  top: 90px;
+  width: 340px;
+  font-size: 12px;
+}
+
+.profile-hero {
+  left: 126px;
+  top: 212px;
+  width: 780px;
+  height: 166px;
+}
+
+.profile-hero-icon {
+  left: 2px;
+  top: -137px;
+  width: 67px;
+  height: 46px;
   transform: none;
 }
 
+.profile-hero h2 {
+  left: 0;
+  right: 0;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 48px;
+  font-style: italic;
+  letter-spacing: 0;
+  justify-content: center;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.profile-lower-row {
+  left: 0;
+  top: 0;
+  width: 1512px;
+  height: 982px;
+  display: block;
+}
+
+.profile-footer {
+  position: absolute;
+  left: 127px;
+  top: 931px;
+  width: 1313px;
+  height: 31px;
+  display: block;
+  color: #fff;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.profile-meta {
+  position: absolute;
+  top: 0;
+  width: 358px;
+  height: 31px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.profile-meta strong {
+  font-weight: 700;
+}
+
+.profile-meta i {
+  flex: 1;
+  height: 1px;
+  background: #fff;
+}
+
+.profile-meta span {
+  text-align: right;
+  text-transform: none;
+}
+
+.profile-meta.date {
+  left: 0;
+}
+
+.profile-meta.time {
+  left: 465px;
+}
+
+.profile-meta.user-number {
+  right: 0;
+  width: 230px;
+}
+
+.profile-content.summary-closed .profile-hero {
+  top: 212px;
+}
+
+.profile-content.summary-closed .profile-lower-row,
+.profile-content.summary-closed .profile-right-column {
+  top: 0;
+}
+
+.profile-content.summary-open .profile-right-column {
+  top: 0;
+}
+
+.summary-box,
+.summary-tab {
+  background: #fff;
+  border-color: #222;
+  color: #222;
+}
+
+.summary-box h3,
+.summary-copy,
+.summary-close,
+.summary-tab .tab-label,
+.summary-tab .tab-arrow {
+  color: #222;
+}
+
+.summary-line {
+  background: #222;
+}
+
+.summary-copy span {
+  color: #555;
+}
+
+.profile-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin: 0 0 14px;
+  width: 410px;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.profile-row-label {
+  font-weight: 700;
+  text-align: left;
+}
+
+.profile-row-value {
+  font-weight: 400;
+  text-align: right;
+}
+
+/* profile layout: edit each panel part in one place */
+.profile-panel {
+  position: absolute;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
+.profile-panel.demographics,
+.profile-panel.personality {
+  top: 450px;
+  width: 450px;
+  height: 442px;
+}
+
+.profile-panel.demographics {
+  left: 127px;
+}
+
+.profile-panel.personality {
+  left: 590px;
+}
+
+.profile-panel.behaviour {
+  left: 1050px;
+  top: 217px;
+  width: 420px;
+  height: 423px;
+}
+
+.profile-panel.assessment {
+  left: 1050px;
+  top: 670px;
+  width: 490px;
+  height: 200px;
+}
+
+.profile-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 410px;
+  height: 217px;
+  border: 1px solid #fff;
+  background: #000;
+}
+
+.profile-image img {
+  display: block;
+  max-width: 280px;
+  max-height: 170px;
+}
+
+.profile-panel.behaviour .profile-image {
+  width: 420px;
+  height: 233px;
+}
+
+.profile-heading {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 41px;
+  padding: 0 17px;
+  background: #fff;
+  color: #222;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profile-panel.demographics .profile-heading,
+.profile-panel.personality .profile-heading {
+  top: 220px;
+  width: 430px;
+}
+
+.profile-panel.behaviour .profile-heading {
+  top: 270px;
+  width: 430px;
+  height: 45px;
+}
+
+.profile-panel.assessment .profile-heading {
+  top: 0px;
+  width: 490px;
+  height: 45px;
+}
+
+.profile-description {
+  position: absolute;
+  left: 0;
+  color: #fff;
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.profile-panel.demographics .profile-description,
+.profile-panel.personality .profile-description {
+  top: 300px;
+  width: 430px;
+  height: 150px;
+  padding: 15px;
+  border: 1px solid #fff;
+}
+
+.profile-panel.behaviour .profile-description {
+  top: 350px;
+  width: 430px;
+  height: 99px;
+  padding: 15px;
+  border: 1px solid #fff;
+}
+
+.profile-panel.assessment .profile-description {
+  top: 80px;
+  width: 490px;
+  height: 145px;
+  padding: 10px;
+  border: 1px solid #fff;
+}
+
+.profile-panel .section-line {
+  display: none;
+}
+
+.profile-panel.assessment .profile-description p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* utilities: accessibility and helper classes */
+
+/* visually hidden: accessible text that is not visually displayed */
 .visually-hidden {
   position: absolute;
   width: 1px;
