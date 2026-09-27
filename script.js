@@ -3,21 +3,21 @@ const STAGE_HEIGHT = 982;
 const EXPERIENCE_MS = 45000;
 const EXPORT_SERVICE_URL = "";
 const VIZ_DATA_SRC = "./Final_Viz/Final_AI_Biometrics.json";
+const PARTICIPANT_ROUND_KEY = "the-ai-profile-participant-round";
 const OLLAMA_CONFIG = {
   endpoint: "http://127.0.0.1:11434/api/generate",
   model: "granite4.1:3b",
   prompts: {
-    personType: "Describe the overall person type suggested by these interaction measurements in a short phrase. example: 'You are a curious and confident thinker'",
-    ageGroup: "Infer an exaggerated age group from these interaction measurements. Use a number range and the corresponding generation (ages from 13-101). Return a short label only.",
-    educationLevel: "Infer an exaggerated education level from these interaction measurements. Mention what degree level they have obtained. Return a short label only.",
-    profession: "Infer an exaggerated profession from these interaction measurements. Also add a brief explanation. Return a short label only.",
-    familyStatus: "Infer an exaggerated marital status from these interaction measurements. Return a short label only.",
-    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Return a short label only.",
-    curiosity: "Infer an exaggerated curiosity level from these interaction measurements. Return a short label only.",
+    personType: "Describe the overall person type suggested by these interaction measurements in 1-2 sentences. example: 'You are a curious and confident thinker'",
+    ageGroup: "Infer an exaggerated age group from these interaction measurements. Shortly use a number range and the corresponding generation (ages from 13-101). Use 3-4 word only.",
+    educationLevel: "Infer an exaggerated education level from these interaction measurements. Mention what degree level they have obtained.  Use 3-4 words only.",
+    profession: "Infer an exaggerated profession from these interaction measurements. Also add a brief explanation.  Use 3-4 words only.",
+    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Use 3-4 words only.",
+    curiosity: "Infer an exaggerated curiosity level from these interaction measurements. Use 3-4 words only.",
     confidenceScore: "Infer an exaggerated confidence score from these interaction measurements. Show in percentage out of 100 (e.g., 75%). Low scores indicate low confidence. Return a short label only.",
-    attentionLevel: "Infer an exaggerated attention level from these interaction measurements. Return a short label only.",
-    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was. Return a short label only.",
-    stressLevel: "Infer an exaggerated stress level from these interaction measurements. Return a short label only.",
+    attentionLevel: "Infer an exaggerated attention level from these interaction measurements. Use 3-4 words only.",
+    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was. Use 3-4 words only.",
+    stressLevel: "Infer an exaggerated stress level from these interaction measurements. Use 3-4 words only.",
     assessmentSummary: "Write one short paragraph of 2 to 3 sentences describing the exaggerated personality interpretation. Make strong assumptions about the user's personality and characture type. Make it a bit over the top. Adress the user directly. Also try not to repeat to much of what has already been said."
   }
 };
@@ -25,6 +25,8 @@ const PROJECT_EMAIL_INTRO = "The AI Profile is an interactive project about how 
 
 const ASSETS = {
   introNetwork: "./icons/Ai_icon.svg",
+  homeProfileIcon: "./icons/Ai_icon.svg",
+  profileIcon: "./Your_profile/yourprofile_icon.svg",
   pausedIconCircle: "./icons/questionmark_icon.png",
   pausedIconHourglass: "./icons/sandhour_icon.svg"
 };
@@ -185,10 +187,17 @@ function profileMetadata() {
   };
 }
 
+function nextParticipantRound() {
+  const storedRound = Number.parseInt(localStorage.getItem(PARTICIPANT_ROUND_KEY) || "0", 10);
+  const nextRound = Number.isFinite(storedRound) ? storedRound + 1 : 1;
+  localStorage.setItem(PARTICIPANT_ROUND_KEY, String(nextRound));
+  return String(nextRound).padStart(3, "0");
+}
+
 function emptyProfile() {
   return {
     personType: "[Person Type]",
-    demographics: ["[Age Group]", "[Education Level]", "[Profession]", "[Family Status]"],
+    demographics: ["[Age Group]", "[Education Level]", "[Profession]"],
     personality: ["[Decision-Making Style]", "[Curiosity]", "[Confidence Score]"],
     behaviour: ["[Attention Level]", "[Engagement Level]", "[Stress Level]"],
     assessment: ["[Assessment summary]"]
@@ -242,7 +251,6 @@ function normalizeProfile(result) {
       labeledValue("Age Group", "ageGroup", "[Age Group]"),
       labeledValue("Education Level", "educationLevel", "[Education Level]"),
       labeledValue("Profession", "profession", "[Profession]"),
-      labeledValue("Family Status", "familyStatus", "[Family Status]")
     ],
     personality: [
       labeledValue("Decision-Making Style", "decisionMakingStyle", "[Decision-Making Style]"),
@@ -362,7 +370,7 @@ function renderSidebar(mode, showLargeHome) {
   return `
     <div class="left-rail"></div>
     <button class="home-button" data-action="sidebar-home" aria-label="The AI Profile">
-      <img src="${ASSETS.introNetwork}" alt="" />
+      <img src="${ASSETS.homeProfileIcon}" alt="" />
     </button>
     <button class="vertical-link how" data-action="sidebar-how">How it works</button>
     <button class="vertical-link about" data-action="sidebar-about">About</button>
@@ -388,7 +396,7 @@ function overlayConfig(type, paused) {
           copy: introCopy.profile
         }
       : {
-          icon: `<div class="intro-icon"><img src="${ASSETS.introNetwork}" alt="" /></div>`,
+          icon: `<div class="modal-profile-icon"><img src="${ASSETS.profileIcon}" alt="" /></div>`,
           title: "The AI Profile",
           subtitle: "Biometric data & Automated Bias",
           copy: introCopy.profile
@@ -400,7 +408,7 @@ function overlayConfig(type, paused) {
       ? {
           icon: renderPausedIcon(),
           title: "Time Paused",
-          subtitle: "How it orks:",
+          subtitle: "How it Works:",
           copy: introCopy.how,
           emphasizeExaggerated: true
         }
@@ -421,7 +429,7 @@ function overlayConfig(type, paused) {
         copy: introCopy.about
       }
     : {
-        icon: `<div class="modal-icon-circle info">i</div>`,
+        icon: `<div class="modal-about-icon"><img src="${ASSETS.pausedIconCircle}" alt="" /></div>`,
         title: "About the Project",
         subtitle: "A data visualization",
         copy: introCopy.about
@@ -516,7 +524,6 @@ function renderTracking() {
       <div class="menu-bar">${renderSidebar(state.overlay || "home", false)}</div>
       <div class="data-viz">${renderVisualizationLayer()}</div>
       <div class="timer">${renderTracker()}</div>
-      <button class="dev-finish-button" data-action="dev-finish-timer">Finish (dev)</button>
       ${state.overlay ? renderOverlay(state.overlay, true) : ""}
     </section>
   `;
@@ -563,6 +570,7 @@ function renderProfile() {
             <span class="profile-frame-line divider"></span>
           </div>
           <h1 class="profile-title">"Your Profile</h1>
+          <h2 class="profile-question">To what extent are the results correct ?</h2>
           <p class="ollama-status" role="status">${escapeHtml(ollamaMessage)}</p>
           <div class="profile-hero">
             ${cornerMarkersHtml()}
@@ -634,10 +642,6 @@ function renderProfile() {
           <p>Generating your profile...</p>
         </div>
       ` : ""}
-      ${state.ollamaStatus === "loading" ? "" : `
-        <div class="profile-edge-block top" aria-hidden="true"></div>
-        <div class="profile-edge-block bottom" aria-hidden="true"></div>
-      `}
       ${state.overlay ? renderOverlay(state.overlay, false) : ""}
     </section>
   `;
@@ -760,6 +764,7 @@ function bindDynamicEvents() {
     const key = element.getAttribute("data-scroll-key");
     element.addEventListener("scroll", () => {
       const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 4;
+      element.classList.toggle("read", element.scrollTop > 0);
       if (atBottom && !state.introRead[key]) {
         state.introRead[key] = true;
         unlockIntroCta(key);
@@ -782,17 +787,6 @@ async function handleAction(event) {
 
   if (action === "start-experience") {
     startExperience();
-    return;
-  }
-
-  // TEMP dev-only shortcut to skip the countdown while building the site; remove before launch.
-  if (action === "dev-finish-timer") {
-    stopTicker();
-    state.timerRemaining = 0;
-    state.metrics.active = false;
-    state.screen = "results";
-    state.overlay = null;
-    render();
     return;
   }
 
@@ -897,7 +891,6 @@ function resetExperience() {
   state.exportOpen = false;
   state.exportNotice = "";
   state.sessionStartedAt = null;
-  state.sessionNumber = "001";
   state.profile = null;
   state.ollamaStatus = "idle";
   state.ollamaError = "";
@@ -912,7 +905,7 @@ function startExperience() {
   state.overlay = null;
   state.timerRemaining = EXPERIENCE_MS;
   state.sessionStartedAt = new Date();
-  state.sessionNumber = String(Math.floor(100 + Math.random() * 900));
+  state.sessionNumber = nextParticipantRound();
   state.metrics = createMetrics();
   state.metrics.active = true;
   state.lastTick = performance.now();

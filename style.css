@@ -326,8 +326,8 @@ main {
   place-items: center;
   color: #fff;
   z-index: 6;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   width: 36px;
   height: 36px;
   border: 1px solid #fff;
@@ -340,6 +340,39 @@ main {
 /* modal-icon-circle info: smaller letter i inside the About overlay */
 .modal-icon-circle.info {
   font-size: 18px;
+}
+
+.modal-profile-icon {
+  position: absolute;
+  left: 50vw;
+  top: 50vh;
+  width: 67px;
+  height: 46px;
+  transform: translate(-313.5px, -190px);
+  z-index: 6;
+}
+
+.modal-profile-icon img {
+  display: block;
+  width: 67px;
+  height: 46px;
+}
+
+.modal-about-icon {
+  position: absolute;
+  left: 50vw;
+  top: 50vh;
+  width: 55px;
+  height: 55px;
+  transform: translate(-289.5px, -190px);
+  z-index: 6;
+}
+
+.modal-about-icon img {
+  display: block;
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
 }
 
 /* paused figma icon: removes circle border, matches intro/result icon size, centered above the modal line */
@@ -417,8 +450,8 @@ main {
   width: 36px;
   height: 1px;
   z-index: 6;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   transform: translate(-280px, -122px);
 }
 
@@ -817,22 +850,6 @@ main {
   height: auto;
 }
 
-/* TEMP dev-only button: lets you skip the countdown while building the site; remove before launch */
-.dev-finish-button {
-  position: fixed;
-  left: 756px;
-  bottom: 16px;
-  transform: translateX(-50px);
-  padding: 8px 14px;
-  border: 1px dashed #ff5656;
-  border-radius: 2px;
-  background: rgba(255, 86, 86, 0.15);
-  color: #ff5656;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  z-index: 10;
-}
-
 /* timer content: countdown and live interaction metrics */
 
 /* tracker: right-side card around countdown and metric rows */
@@ -908,8 +925,8 @@ main {
 /* modal box: fixed-size overlay card frame */
 .modal-box {
   position: absolute;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   width: 660px;
   height: 482px;
   transform: translate(-330px, -241px);
@@ -944,8 +961,8 @@ main {
 /* modal title: large heading inside overlays */
 .modal-title {
   position: absolute;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   margin: 0;
   font-family: "Space Grotesk", "Nudica Mono", sans-serif;
   font-size: 28px;
@@ -958,8 +975,8 @@ main {
 /* modal subtitle: smaller context label inside overlays */
 .modal-subtitle {
   position: absolute;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   margin: 0;
   font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
   font-size: 12px;
@@ -971,14 +988,14 @@ main {
 
 /* modal copy: scrollable text area inside overlays */
 .modal-copy {
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   width: 540px;
   max-height: 180px;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 6;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 16px;
   transform: translate(-280px, -18px);
 }
@@ -986,8 +1003,8 @@ main {
 /* modal close: x button in the modal corner */
 .modal-close {
   position: absolute;
-  left: 756px;
-  top: 491px;
+  left: 50vw;
+  top: 50vh;
   width: 28px;
   height: 28px;
   display: grid;
@@ -1119,7 +1136,7 @@ main {
 /* profile right column: container that stacks behaviour above assessment */
 .profile-right-column {
   position: absolute;
-  left: 0px;
+  left: 5px;
   top: 120px;
   width: 420px;
   display: flex;
@@ -1130,7 +1147,7 @@ main {
 /* sheet button: shared profile-screen action button */
 .sheet-button {
   position: absolute;
-  top: 40px;
+  top: 80px;
   height: 36px;
   border: 1px solid #fff;
   border-radius: 2px;
@@ -1146,13 +1163,13 @@ main {
 
 /* export button: opens the PDF export panel */
 .sheet-button.export {
-  left: 1090px;
+  left: 1250px;
   width: 121px;
 }
 
 /* re-explore button: returns from profile to free exploration */
 .sheet-button.reexplore {
-  left: 1247px;
+  left: 1418px;
   width: 129px;
 }
 
@@ -1166,7 +1183,7 @@ main {
 .summary-box {
   position: absolute;
   right: 0;
-  top: 200px;
+  top: 0;
   width: 287px;
   height: 200px;
   border: 1px solid #fff;
@@ -1203,7 +1220,7 @@ main {
 .summary-copy {
   position: absolute;
   left: 26px;
-  top: 31px;
+  top: 35px;
   width: 235px;
   font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
   font-size: 14px;
@@ -1253,7 +1270,7 @@ main {
 .summary-tab {
   position: absolute;
   right: 0;
-  top: 200px;
+  top: 0px;
   width: 40px;
   height: 240px;
   border: 1px solid #fff;
@@ -1452,7 +1469,6 @@ main {
   transform-origin: top left;
 }
 
-/* Figma frame decorations: thin structural rules and right-edge white blocks */
 .profile-frame-decor {
   position: absolute;
   inset: 0;
@@ -1471,21 +1487,21 @@ main {
 }
 
 .profile-frame-line.top {
-  left: 72px;
+  left: 0;
   top: 109px;
-  width: 1440px;
+  width: 1600px;
 }
 
 .profile-frame-line.hero-rule {
-  left: 69px;
+  left: 0;
   top: 415px;
-  width: 903px;
+  width: 1600px;
 }
 
 .profile-frame-line.bottom {
-  left: 72px;
+  left: 0;
   top: 931px;
-  width: 861px;
+  width: 1600px;
 }
 
 .profile-frame-line.center {
@@ -1512,24 +1528,6 @@ main {
   transform-origin: left top;
 }
 
-.profile-edge-block {
-  position: absolute;
-  right: 0;
-  width: 40px;
-  background: #fff;
-  pointer-events: none;
-  z-index: 11;
-}
-
-.profile-edge-block.top {
-  top: 0;
-  height: 109px;
-}
-
-.profile-edge-block.bottom {
-  bottom: 0;
-  height: 51px;
-}
 
 /* black visual panels with white information bands */
 .profile-hero {
@@ -1598,6 +1596,20 @@ main {
   text-transform: uppercase;
 }
 
+.profile-question {
+  position: absolute;
+  left: 125px;
+  top: 155px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
+  font-size: 22px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+}
+
 .ollama-status {
   left: 700px;
   top: 90px;
@@ -1624,7 +1636,7 @@ main {
   left: 0;
   right: 0;
   font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
-  font-size: 48px;
+  font-size: 40px;
   font-style: italic;
   letter-spacing: 0;
   justify-content: center;
@@ -1659,7 +1671,7 @@ main {
 .profile-meta {
   position: absolute;
   top: 0;
-  width: 358px;
+  width: 430px;
   height: 31px;
   display: flex;
   align-items: center;
@@ -1673,7 +1685,7 @@ main {
 
 .profile-meta i {
   flex: 1;
-  height: 1px;
+  height: 0.5px;
   background: #fff;
 }
 
@@ -1687,11 +1699,11 @@ main {
 }
 
 .profile-meta.time {
-  left: 465px;
+  left: 462px;
 }
 
 .profile-meta.user-number {
-  right: 0;
+  left: 1190px;
   width: 230px;
 }
 
@@ -1733,13 +1745,14 @@ main {
 
 .profile-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 8px;
   margin: 0 0 14px;
-  width: 410px;
+  width: 398px;
   font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .profile-row-label {
@@ -1750,6 +1763,12 @@ main {
 .profile-row-value {
   font-weight: 400;
   text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.profile-panel.behaviour .profile-row {
+  width: 458px;
 }
 
 /* profile layout: edit each panel part in one place */
@@ -1779,7 +1798,7 @@ main {
 .profile-panel.behaviour {
   left: 1050px;
   top: 217px;
-  width: 420px;
+  width: 490px;
   height: 423px;
 }
 
@@ -1796,21 +1815,59 @@ main {
   top: 0;
   display: grid;
   place-items: center;
-  width: 410px;
+  width: 430px;
   height: 217px;
   border: 1px solid #fff;
   background: #000;
 }
 
+.profile-image::before,
+.profile-image::after {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 108px;
+  width: 482px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.profile-image::before {
+  transform: rotate(26.7deg);
+}
+
+.profile-image::after {
+  transform: rotate(-26.7deg);
+}
+
 .profile-image img {
   display: block;
+  position: relative;
+  z-index: 1;
   max-width: 280px;
   max-height: 170px;
 }
 
 .profile-panel.behaviour .profile-image {
-  width: 420px;
+  width: 490px;
   height: 233px;
+}
+
+.profile-panel.behaviour .profile-image::before,
+.profile-panel.behaviour .profile-image::after {
+  left: -26.25px;
+  top: 116.5px;
+  width: 542.5px;
+}
+
+.profile-panel.behaviour .profile-image::before {
+  transform: rotate(25.4deg);
+}
+
+.profile-panel.behaviour .profile-image::after {
+  transform: rotate(-25.4deg);
 }
 
 .profile-heading {
@@ -1818,7 +1875,7 @@ main {
   left: 0;
   display: flex;
   align-items: center;
-  height: 41px;
+  height: 45px;
   padding: 0 17px;
   background: #fff;
   color: #222;
@@ -1836,15 +1893,15 @@ main {
 }
 
 .profile-panel.behaviour .profile-heading {
-  top: 270px;
-  width: 430px;
+  top: 240px;
+  width: 490px;
   height: 45px;
 }
 
 .profile-panel.assessment .profile-heading {
   top: 0px;
   width: 490px;
-  height: 45px;
+  height: 60px;
 }
 
 .profile-description {
@@ -1852,10 +1909,14 @@ main {
   left: 0;
   color: #fff;
   font-family: "Google Sans", "Product Sans", Roboto, Arial, sans-serif;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.45;
   text-transform: none;
+  overflow: auto;
+  scrollbar-width: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-panel.demographics .profile-description,
@@ -1868,9 +1929,9 @@ main {
 }
 
 .profile-panel.behaviour .profile-description {
-  top: 350px;
-  width: 430px;
-  height: 99px;
+  top: 330px;
+  width: 490px;
+  height: 120px;
   padding: 15px;
   border: 1px solid #fff;
 }
@@ -1878,9 +1939,13 @@ main {
 .profile-panel.assessment .profile-description {
   top: 80px;
   width: 490px;
-  height: 145px;
+  height: 150px;
   padding: 10px;
   border: 1px solid #fff;
+  font-weight: 600;
+  font-style: italic;
+  color: #000;
+  background-color: white;
 }
 
 .profile-panel .section-line {
@@ -1890,6 +1955,8 @@ main {
 .profile-panel.assessment .profile-description p {
   margin: 0;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* utilities: accessibility and helper classes */
