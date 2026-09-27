@@ -6,6 +6,7 @@ const VIZ_DATA_SRC = "./Final_Viz/Final_AI_Biometrics.json";
 const PARTICIPANT_ROUND_KEY = "the-ai-profile-participant-round";
 const OLLAMA_CONFIG = {
   endpoint: "http://127.0.0.1:11434/api/generate",
+  remoteEndpoint: "https://miiichelleo.github.io/The_AI_Profile/.example/api/profile",
   model: "granite4.1:3b",
   prompts: {
     personType: "Describe the overall person type suggested by these interaction measurements in 1-2 sentences. example: 'You are a curious and confident thinker'",
@@ -73,6 +74,7 @@ const state = {
   sessionStartedAt: null,
   sessionNumber: "001",
   ollamaStatus: "idle",
+  profileSource: "",
   ollamaError: "",
   metrics: createMetrics()
 };
@@ -286,23 +288,65 @@ function cornerMarkersHtml() {
   </span>`;
 }
 
+function browserGeneratedProfile() {
+  const speed = state.metrics.moveDuration > 0
+    ? state.metrics.totalDistance / state.metrics.moveDuration
+    : 0;
+  const clicks = state.metrics.clickCount;
+  const hover = state.metrics.hoverTime;
+  const idle = state.metrics.idleTime;
+  const pace = speed > 700 ? "rapid" : speed > 300 ? "steady" : "deliberate";
+  const focus = idle > 12 ? "easily distracted" : hover > 5 ? "highly attentive" : "selectively focused";
+  const engagement = clicks > 12 ? "highly engaged" : clicks > 5 ? "actively engaged" : "quietly observant";
+  const confidence = Math.min(98, Math.max(18, Math.round(42 + speed / 35 + clicks * 2)));
+
+  return normalizeProfile({
+    personType: `${pace} ${engagement} explorer`,
+    ageGroup: speed > 700 ? "18-25, Gen Z" : speed > 300 ? "26-40, Millennials" : "41-60, Gen X",
+    educationLevel: clicks > 8 ? "Advanced degree" : "Bachelor's degree",
+    profession: pace === "rapid" ? "Digital creator" : "Careful researcher",
+    decisionMakingStyle: pace === "rapid" ? "Fast and intuitive" : "Cautious and deliberate",
+    curiosity: clicks > 8 ? "Highly curious" : "Quietly curious",
+    confidenceScore: `${confidence}% confidence`,
+    attentionLevel: focus,
+    engagementLevel: engagement,
+    stressLevel: speed > 800 ? "Heightened urgency" : "Low stress",
+    assessmentSummary: `Your interaction pattern suggests a ${pace} and ${engagement} approach. Confidence appears moderate at ${confidence} percent, with ${focus} shaping the overall reading.`
+  });
+}
+
 async function generateProfile() {
   state.ollamaStatus = "loading";
   state.ollamaError = "";
+  state.profileSource = "";
   render();
 
+  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  const endpoint = localHost ? OLLAMA_CONFIG.endpoint : OLLAMA_CONFIG.remoteEndpoint;
+  if (!localHost && endpoint.includes("YOUR_BACKEND_DOMAIN")) {
+    if (state.screen !== "profile") {
+      return;
+    }
+    state.profile = browserGeneratedProfile();
+    state.profileSource = "browser";
+    state.ollamaStatus = "ready";
+    state.ollamaError = "Configure OLLAMA_CONFIG.remoteEndpoint for the hosted AI service.";
+    render();
+    return;
+  }
+
   try {
-    const response = await fetch(OLLAMA_CONFIG.endpoint, {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: OLLAMA_CONFIG.model,
-        prompt: profilePrompt(trackerMetrics()),
-        format: "json",
-        stream: false,
-        options: { temperature: 0.7 }
+        metrics: state.metrics
       })
     });
+    window.clearTimeout(timeoutId);
     if (!response.ok) {
       throw new Error(`Ollama returned ${response.status}`);
     }
@@ -310,16 +354,18 @@ async function generateProfile() {
     if (state.screen !== "profile") {
       return;
     }
-    state.profile = normalizeProfile(JSON.parse(payload.response));
+    const profileResult = payload.profile || payload;
+    state.profile = normalizeProfile(profileResult);
+    state.profileSource = localHost ? "ollama" : "backend";
     state.ollamaStatus = "ready";
   } catch (error) {
     if (state.screen !== "profile") {
       return;
     }
-    state.profile = emptyProfile();
-    state.ollamaStatus = "error";
-    state.ollamaError = "Ollama is unavailable. Showing editable placeholders.";
-    console.error("Could not generate profile with Ollama.", error);
+    state.profile = browserGeneratedProfile();
+    state.profileSource = "browser";
+    state.ollamaStatus = "ready";
+    console.warn("Ollama is unavailable. Generated a browser profile instead.", error);
   }
   render();
 }
@@ -555,7 +601,9 @@ function renderProfile() {
   const summaryStateClass = state.summaryOpen ? "summary-open" : "summary-closed";
   const ollamaMessage = state.ollamaStatus === "loading"
     ? "Generating profile with Ollama..."
-    : state.ollamaError || (state.ollamaStatus === "ready" ? `Generated with ${OLLAMA_CONFIG.model}` : "Profile generation not started");
+    : state.ollamaError || (state.ollamaStatus === "ready"
+      ? state.profileSource === "browser" ? "Generated from your interaction data" : `Generated with ${OLLAMA_CONFIG.model}`
+      : "Profile generation not started");
   return `
     <section class="screen" data-screen="profile">
       <div class="menu-bar">${renderSidebar(state.overlay || "home", false)}</div>
@@ -893,6 +941,7 @@ function resetExperience() {
   state.sessionStartedAt = null;
   state.profile = null;
   state.ollamaStatus = "idle";
+  state.profileSource = "";
   state.ollamaError = "";
   state.introRead.profile = false;
   state.introRead.how = false;

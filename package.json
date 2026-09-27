@@ -1,0 +1,12 @@
+{
+  "name": "the-ai-profile-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Backend proxy from GitHub Pages to local Ollama",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
