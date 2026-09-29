@@ -9,18 +9,24 @@ const OLLAMA_CONFIG = {
   remoteEndpoint: "https://miiichelleo.github.io/The_AI_Profile/.example/api/profile",
   model: "granite4.1:3b",
   prompts: {
-    personType: "Describe the overall person type suggested by these interaction measurements in 1-2 sentences. example: 'You are a curious and confident thinker'",
+    personType: "Describe an exaggerated overall person type based on interaction measurements in a phrase. Make it funy and a bit silly 'like a playful genius' Dont repeat words.",
     ageGroup: "Infer an exaggerated age group from these interaction measurements. Shortly use a number range and the corresponding generation (ages from 13-101). Use 3-4 word only.",
     educationLevel: "Infer an exaggerated education level from these interaction measurements. Mention what degree level they have obtained.  Use 3-4 words only.",
     profession: "Infer an exaggerated profession from these interaction measurements. Also add a brief explanation.  Use 3-4 words only.",
-    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Use 3-4 words only.",
+    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Make it funny. Use 3-4 words only.",
     curiosity: "Infer an exaggerated curiosity level from these interaction measurements. Use 3-4 words only.",
     confidenceScore: "Infer an exaggerated confidence score from these interaction measurements. Show in percentage out of 100 (e.g., 75%). Low scores indicate low confidence. Return a short label only.",
     attentionLevel: "Infer an exaggerated attention level from these interaction measurements. Use 3-4 words only.",
-    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was. Use 3-4 words only.",
+    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was, making assumptions about their personality. Use 3-4 words only.",
     stressLevel: "Infer an exaggerated stress level from these interaction measurements. Use 3-4 words only.",
-    assessmentSummary: "Write one short paragraph of 2 to 3 sentences describing the exaggerated personality interpretation. Make strong assumptions about the user's personality and characture type. Make it a bit over the top. Adress the user directly. Also try not to repeat to much of what has already been said."
+    assessmentSummary: "Write one short paragraph of 2 to 3 sentences describing the exaggerated personality interpretation. Make strong assumptions about the user's personality and characture type. Make it a bit over the top and funny. Adress the user directly. Also try not to repeat to much of what has already been said."
   }
+};
+const RESEARCH_NORMS = {
+  mouseSpeed: { label: "Mouse speed", low: 200, high: 1200, unit: "px/s", below: "slow", above: "fast" },
+  hoverTime: { label: "Hover time", low: 0.3, high: 0.5, unit: "seconds", below: "short", above: "long" },
+  clickFrequency: { label: "Click frequency", low: 6, high: 7, unit: "clicks/s", below: "low", above: "high" },
+  idleTime: { label: "Idle time", low: 0.308, high: 0.308, unit: "seconds", below: "short", above: "long" }
 };
 const PROJECT_EMAIL_INTRO = "The AI Profile is an interactive project about how everyday interaction data can be collected as behavioural biometrics and interpreted by AI systems. The profile below is intentionally exaggerated and should not be treated as a factual assessment.";
 
@@ -164,6 +170,30 @@ function trackerMetrics() {
   };
 }
 
+function metricBenchmark(value, norm) {
+  const status = value < norm.low ? "below norm" : value > norm.high ? "above norm" : "within norm";
+  return {
+    value,
+    status,
+    reference: norm.low === norm.high
+      ? `${norm.low} ${norm.unit}`
+      : `${norm.low}-${norm.high} ${norm.unit}`
+  };
+}
+
+function researchBenchmarks(metrics) {
+  const speed = metrics.moveDuration > 0 ? metrics.totalDistance / metrics.moveDuration : 0;
+  const clicksPerSecond = metrics.active && metrics.moveDuration > 0
+    ? metrics.clickCount / metrics.moveDuration
+    : metrics.clickCount / Math.max(EXPERIENCE_MS / 1000, 1);
+  return {
+    mouseSpeed: metricBenchmark(speed, RESEARCH_NORMS.mouseSpeed),
+    hoverTime: metricBenchmark(metrics.hoverTime, RESEARCH_NORMS.hoverTime),
+    clickFrequency: metricBenchmark(clicksPerSecond, RESEARCH_NORMS.clickFrequency),
+    idleTime: metricBenchmark(metrics.idleTime, RESEARCH_NORMS.idleTime)
+  };
+}
+
 function formatCountdown(ms) {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -206,6 +236,7 @@ function emptyProfile() {
 }
 
 function profilePrompt(metrics) {
+  const benchmarks = researchBenchmarks(metrics);
   const prompts = Object.entries(OLLAMA_CONFIG.prompts)
     .map(([key, prompt]) => `${key}: ${prompt}`)
     .join("\n");
@@ -214,6 +245,14 @@ Use only the measured interaction data below. Do not claim this is a real psycho
 
 Measured interaction data:
 ${JSON.stringify(metrics, null, 2)}
+
+Research-supported experimental norms. Treat these as the baseline for interpretation:
+${JSON.stringify(RESEARCH_NORMS, null, 2)}
+
+Comparison against the norms. Base the profile on these statuses; below norm means the measured value is below the reference, above norm means it exceeds the reference, and within norm means it falls inside the reference range:
+${JSON.stringify(benchmarks, null, 2)}
+
+Do not invent alternative baselines. Interpret each measurement in relation to its provided norm before making any exaggerated fictional inference.
 
 Field-specific prompts:
 ${prompts}
@@ -294,23 +333,33 @@ function browserGeneratedProfile() {
   const clicks = state.metrics.clickCount;
   const hover = state.metrics.hoverTime;
   const idle = state.metrics.idleTime;
-  const pace = speed > 700 ? "rapid" : speed > 300 ? "steady" : "deliberate";
-  const focus = idle > 12 ? "easily distracted" : hover > 5 ? "highly attentive" : "selectively focused";
-  const engagement = clicks > 12 ? "highly engaged" : clicks > 5 ? "actively engaged" : "quietly observant";
+  const benchmarks = researchBenchmarks(state.metrics);
+  const pace = benchmarks.mouseSpeed.status === "above norm"
+    ? "rapid"
+    : benchmarks.mouseSpeed.status === "below norm" ? "deliberate" : "steady";
+  const focus = benchmarks.idleTime.status === "above norm"
+    ? "easily distracted"
+    : benchmarks.hoverTime.status === "above norm" ? "highly attentive" : "selectively focused";
+  const engagement = benchmarks.clickFrequency.status === "above norm"
+    ? "highly engaged"
+    : benchmarks.clickFrequency.status === "below norm" ? "quietly observant" : "actively engaged";
+  const style = benchmarks.mouseSpeed.status === "above norm"
+    ? "impulsive"
+    : benchmarks.hoverTime.status === "above norm" ? "thoughtful" : "methodical";
   const confidence = Math.min(98, Math.max(18, Math.round(42 + speed / 35 + clicks * 2)));
 
   return normalizeProfile({
-    personType: `${pace} ${engagement} explorer`,
-    ageGroup: speed > 700 ? "18-25, Gen Z" : speed > 300 ? "26-40, Millennials" : "41-60, Gen X",
+    personType: `${style} ${engagement} explorer`,
+    ageGroup: benchmarks.mouseSpeed.status === "above norm" ? "18-25, Gen Z" : benchmarks.mouseSpeed.status === "below norm" ? "41-60, Gen X" : "26-40, Millennials",
     educationLevel: clicks > 8 ? "Advanced degree" : "Bachelor's degree",
     profession: pace === "rapid" ? "Digital creator" : "Careful researcher",
-    decisionMakingStyle: pace === "rapid" ? "Fast and intuitive" : "Cautious and deliberate",
+    decisionMakingStyle: `${style} and ${pace}`,
     curiosity: clicks > 8 ? "Highly curious" : "Quietly curious",
     confidenceScore: `${confidence}% confidence`,
     attentionLevel: focus,
     engagementLevel: engagement,
-    stressLevel: speed > 800 ? "Heightened urgency" : "Low stress",
-    assessmentSummary: `Your interaction pattern suggests a ${pace} and ${engagement} approach. Confidence appears moderate at ${confidence} percent, with ${focus} shaping the overall reading.`
+    stressLevel: benchmarks.mouseSpeed.status === "above norm" ? "Heightened urgency" : "Low stress",
+    assessmentSummary: `Your interaction pattern falls ${benchmarks.mouseSpeed.status} for speed and ${benchmarks.clickFrequency.status} for clicking. This suggests a ${style}, ${engagement} approach, with ${focus} shaping the exaggerated reading.`
   });
 }
 
@@ -322,14 +371,15 @@ async function generateProfile() {
 
   const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
   const endpoint = localHost ? OLLAMA_CONFIG.endpoint : OLLAMA_CONFIG.remoteEndpoint;
-  if (!localHost && endpoint.includes("YOUR_BACKEND_DOMAIN")) {
+  const remoteEndpointConfigured = endpoint && !endpoint.includes("YOUR_BACKEND_DOMAIN") && !endpoint.includes(".example/");
+  if (!localHost && !remoteEndpointConfigured) {
     if (state.screen !== "profile") {
       return;
     }
     state.profile = browserGeneratedProfile();
     state.profileSource = "browser";
     state.ollamaStatus = "ready";
-    state.ollamaError = "Configure OLLAMA_CONFIG.remoteEndpoint for the hosted AI service.";
+    state.ollamaError = "Configure OLLAMA_CONFIG.remoteEndpoint for AI-generated profiles.";
     render();
     return;
   }
@@ -342,7 +392,11 @@ async function generateProfile() {
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
       body: JSON.stringify({
-        metrics: state.metrics
+        model: OLLAMA_CONFIG.model,
+        prompt: profilePrompt(state.metrics),
+        format: "json",
+        stream: false,
+        options: { temperature: 0.7 }
       })
     });
     window.clearTimeout(timeoutId);
