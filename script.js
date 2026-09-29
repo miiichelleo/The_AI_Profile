@@ -6,21 +6,28 @@ const VIZ_DATA_SRC = "./Final_Viz/Final_AI_Biometrics.json";
 const PARTICIPANT_ROUND_KEY = "the-ai-profile-participant-round";
 const OLLAMA_CONFIG = {
   endpoint: "http://127.0.0.1:11434/api/generate",
+  localBackendEndpoint: "http://127.0.0.1:8787/api/profile",
   remoteEndpoint: "https://miiichelleo.github.io/The_AI_Profile/.example/api/profile",
   model: "granite4.1:3b",
   prompts: {
-    personType: "Describe the overall person type suggested by these interaction measurements in 1-2 sentences. example: 'You are a curious and confident thinker'",
-    ageGroup: "Infer an exaggerated age group from these interaction measurements. Shortly use a number range and the corresponding generation (ages from 13-101). Use 3-4 word only.",
-    educationLevel: "Infer an exaggerated education level from these interaction measurements. Mention what degree level they have obtained.  Use 3-4 words only.",
-    profession: "Infer an exaggerated profession from these interaction measurements. Also add a brief explanation.  Use 3-4 words only.",
-    decisionMakingStyle: "Infer an exaggerated decision-making style from these interaction measurements. Use 3-4 words only.",
-    curiosity: "Infer an exaggerated curiosity level from these interaction measurements. Use 3-4 words only.",
-    confidenceScore: "Infer an exaggerated confidence score from these interaction measurements. Show in percentage out of 100 (e.g., 75%). Low scores indicate low confidence. Return a short label only.",
-    attentionLevel: "Infer an exaggerated attention level from these interaction measurements. Use 3-4 words only.",
-    engagementLevel: "Infer an exaggerated engagement level from these interaction measurements. Focus on how concentrated and engaged thhe user was. Use 3-4 words only.",
-    stressLevel: "Infer an exaggerated stress level from these interaction measurements. Use 3-4 words only.",
-    assessmentSummary: "Write one short paragraph of 2 to 3 sentences describing the exaggerated personality interpretation. Make strong assumptions about the user's personality and characture type. Make it a bit over the top. Adress the user directly. Also try not to repeat to much of what has already been said."
+    personType: "Describe the person type suggested by the norm deviations in one short phrase. Keep it consistent with the strongest deviation.",
+    ageGroup: "Infer an exaggerated age group from the norm deviations. Use a number range and generation for ages 13-101. Use 3-4 words only.",
+    educationLevel: "Infer an exaggerated education level from the norm deviations. Mention the degree level. Use 3-4 words only.",
+    profession: "Infer an exaggerated profession that fits the norm deviations. Use 3-4 words only.",
+    decisionMakingStyle: "Infer a decision-making style that fits the norm deviations. Use 3-4 words only.",
+    curiosity: "Infer a curiosity level that fits the norm deviations. Use 3-4 words only.",
+    confidenceScore: "Infer a confidence score from the norm deviations. Show a percentage out of 100. Larger positive deviations may support higher confidence; negative deviations may support lower confidence. Return a short label only.",
+    attentionLevel: "Infer an attention level from the hover-time and idle-time deviations. Use 3-4 words only.",
+    engagementLevel: "Infer an engagement level from the click-frequency, hover-time, and idle-time deviations. Use 3-4 words only.",
+    stressLevel: "Infer a stress level from the speed, hover-time, click-frequency, and idle-time deviations. Use 3-4 words only.",
+    assessmentSummary: "Write 3 short, blunt sentences as a direct character overview. Describe what kind of person the user is, including their main strengths, clear flaws, emotional habits, social behavior, contradictions, and what they probably refuse to admit about themselves. Be noticeably mean and critical, not gently positive. Make bold but believable assumptions with a slightly absurd edge. Focus on human traits such as insecurity, vanity, impatience, empathy, selfishness, ambition, avoidance, or the need for approval. Use plain language only: no metaphors, poetic phrasing, dramatic flourishes, or vague wording. Address the user directly; never be hateful or abusive."
   }
+};
+const RESEARCH_NORMS = {
+  mouseSpeed: { label: "Mouse speed", low: 200, high: 1200, unit: "table units" },
+  hoverTime: { label: "Hover time", low: 300, high: 500, unit: "milliseconds" },
+  clickFrequency: { label: "Click frequency", low: 6, high: 7, unit: "clicks/second" },
+  idleTime: { label: "Idle time", low: 308.7, high: 308.7, unit: "milliseconds" }
 };
 const PROJECT_EMAIL_INTRO = "The AI Profile is an interactive project about how everyday interaction data can be collected as behavioural biometrics and interpreted by AI systems. The profile below is intentionally exaggerated and should not be treated as a factual assessment.";
 
@@ -164,6 +171,29 @@ function trackerMetrics() {
   };
 }
 
+function compareToNorm(value, norm) {
+  const status = value < norm.low ? "below norm" : value > norm.high ? "above norm" : "within norm";
+  const deviation = value < norm.low ? value - norm.low : value > norm.high ? value - norm.high : 0;
+  return {
+    measured: Number(value.toFixed(2)),
+    reference: norm.low === norm.high ? norm.low : [norm.low, norm.high],
+    unit: norm.unit,
+    status,
+    deviation: Number(deviation.toFixed(2))
+  };
+}
+
+function measuredNormComparisons(metrics) {
+  const speed = metrics.moveDuration > 0 ? metrics.totalDistance / metrics.moveDuration : 0;
+  const clicksPerSecond = metrics.clickCount / (EXPERIENCE_MS / 1000);
+  return {
+    mouseSpeed: compareToNorm(speed, RESEARCH_NORMS.mouseSpeed),
+    hoverTime: compareToNorm(metrics.hoverTime * 1000, RESEARCH_NORMS.hoverTime),
+    clickFrequency: compareToNorm(clicksPerSecond, RESEARCH_NORMS.clickFrequency),
+    idleTime: compareToNorm(metrics.idleTime * 1000, RESEARCH_NORMS.idleTime)
+  };
+}
+
 function formatCountdown(ms) {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -206,14 +236,19 @@ function emptyProfile() {
 }
 
 function profilePrompt(metrics) {
+  const normComparisons = measuredNormComparisons(metrics);
   const prompts = Object.entries(OLLAMA_CONFIG.prompts)
     .map(([key, prompt]) => `${key}: ${prompt}`)
     .join("\n");
   return `You are generating an intentionally exaggerated fictional profile for an interactive art project.
 Use only the measured interaction data below. Do not claim this is a real psychological, demographic, medical, or identity assessment.
 
-Measured interaction data:
-${JSON.stringify(metrics, null, 2)}
+Measured interaction data compared with the fixed research norms:
+${JSON.stringify(normComparisons, null, 2)}
+
+Use the measured numbers and their numeric deviations from these norms as the only basis for interpretation. Do not invent another baseline.
+Interpretation rules: below norm indicates less of that measured behaviour, above norm indicates more, and within norm indicates typical behaviour. Keep all fields consistent with these directions.
+Assessment exception: use the generated profile fields as the basis for a general personality portrait. The assessment must not explain the measurements or norm deviations and must not use words such as interaction, mouse, click, hover, idle, speed, norm, deviation, or data.
 
 Field-specific prompts:
 ${prompts}
@@ -310,7 +345,7 @@ function browserGeneratedProfile() {
     attentionLevel: focus,
     engagementLevel: engagement,
     stressLevel: speed > 800 ? "Heightened urgency" : "Low stress",
-    assessmentSummary: `Your interaction pattern suggests a ${pace} and ${engagement} approach. Confidence appears moderate at ${confidence} percent, with ${focus} shaping the overall reading.`
+    assessmentSummary: `You are ${engagement}, but you are also ${focus} and inconsistent. You want to seem ${pace} and in control, but you are more impatient and approval-seeking than you admit. There is some charm there, but your flaws are doing most of the talking.`
   });
 }
 
@@ -320,8 +355,9 @@ async function generateProfile() {
   state.profileSource = "";
   render();
 
-  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-  const endpoint = localHost ? OLLAMA_CONFIG.endpoint : OLLAMA_CONFIG.remoteEndpoint;
+  const localHost = window.location.protocol === "file:"
+    || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  const endpoint = localHost ? OLLAMA_CONFIG.localBackendEndpoint : OLLAMA_CONFIG.remoteEndpoint;
   if (!localHost && endpoint.includes("YOUR_BACKEND_DOMAIN")) {
     if (state.screen !== "profile") {
       return;
