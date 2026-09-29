@@ -35,10 +35,9 @@ const ASSETS = {
 const introCopy = {
   profile: [
     "Today, AI systems collect vast amounts of personal data to uniquely identify individuals.",
-    "Such biometric data can easily be collected and tracked due to the rise of digital applications.",
-    "From iris patterns to fingerprints and typing rhythms, such data can be used to identify, classify or make predictions about people.",
+    "Such biometric data can easily be collected and tracked due to the rise of digital applications. From iris patterns to fingerprints and typing rhythms, such data can be used to identify, classify or make predictions about people.",
     "Although these AI systems are often presented as objective, the conclusions they produce can be inaccurate, biased or misleading, depending largely on how they are designed, trained and deployed.",
-    "This interactive data visualization explores the network between biometric data, AI profiling and automated bias.",
+    "This interactive data visualization explores the network between biometric data, AI profiling and automated bias. While, based on the reported incidents from the \"AI Incident Database\", AI was implemted to create categorizations as an additional topic layer.",
     "Through this short experience, you will see how easily everyday interactions generate data that can be used to create automated judgements."
   ],
   how: [
