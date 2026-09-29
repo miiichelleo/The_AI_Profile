@@ -6,7 +6,6 @@ const VIZ_DATA_SRC = "./Final_Viz/Final_AI_Biometrics.json";
 const PARTICIPANT_ROUND_KEY = "the-ai-profile-participant-round";
 const OLLAMA_CONFIG = {
   endpoint: "http://127.0.0.1:11434/api/generate",
-  localBackendEndpoint: "http://127.0.0.1:8787/api/profile",
   remoteEndpoint: "https://miiichelleo.github.io/The_AI_Profile/.example/api/profile",
   model: "granite4.1:3b",
   prompts: {
@@ -195,22 +194,6 @@ function researchBenchmarks(metrics) {
   };
 }
 
-function interactionMeasurements(metrics) {
-  const speed = metrics.moveDuration > 0 ? metrics.totalDistance / metrics.moveDuration : 0;
-  const clickFrequency = metrics.active && metrics.moveDuration > 0
-    ? metrics.clickCount / metrics.moveDuration
-    : metrics.clickCount / Math.max(EXPERIENCE_MS / 1000, 1);
-  return {
-    mouseSpeed: Number(speed.toFixed(2)),
-    hoverTime: Number(metrics.hoverTime.toFixed(3)),
-    clickFrequency: Number(clickFrequency.toFixed(3)),
-    idleTime: Number(metrics.idleTime.toFixed(3)),
-    totalDistance: Number(metrics.totalDistance.toFixed(2)),
-    moveDuration: Number(metrics.moveDuration.toFixed(3)),
-    clickCount: metrics.clickCount
-  };
-}
-
 function formatCountdown(ms) {
   const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -253,7 +236,6 @@ function emptyProfile() {
 }
 
 function profilePrompt(metrics) {
-  const measurements = interactionMeasurements(metrics);
   const benchmarks = researchBenchmarks(metrics);
   const prompts = Object.entries(OLLAMA_CONFIG.prompts)
     .map(([key, prompt]) => `${key}: ${prompt}`)
@@ -261,8 +243,8 @@ function profilePrompt(metrics) {
   return `You are generating an intentionally exaggerated fictional profile for an interactive art project.
 Use only the measured interaction data below. Do not claim this is a real psychological, demographic, medical, or identity assessment.
 
-Measured numeric interaction values only:
-${JSON.stringify(measurements, null, 2)}
+Measured interaction data:
+${JSON.stringify(metrics, null, 2)}
 
 Research-supported experimental norms. Treat these as the baseline for interpretation:
 ${JSON.stringify(RESEARCH_NORMS, null, 2)}
@@ -344,23 +326,59 @@ function cornerMarkersHtml() {
   </span>`;
 }
 
+function browserGeneratedProfile() {
+  const speed = state.metrics.moveDuration > 0
+    ? state.metrics.totalDistance / state.metrics.moveDuration
+    : 0;
+  const clicks = state.metrics.clickCount;
+  const hover = state.metrics.hoverTime;
+  const idle = state.metrics.idleTime;
+  const benchmarks = researchBenchmarks(state.metrics);
+  const pace = benchmarks.mouseSpeed.status === "above norm"
+    ? "rapid"
+    : benchmarks.mouseSpeed.status === "below norm" ? "deliberate" : "steady";
+  const focus = benchmarks.idleTime.status === "above norm"
+    ? "easily distracted"
+    : benchmarks.hoverTime.status === "above norm" ? "highly attentive" : "selectively focused";
+  const engagement = benchmarks.clickFrequency.status === "above norm"
+    ? "highly engaged"
+    : benchmarks.clickFrequency.status === "below norm" ? "quietly observant" : "actively engaged";
+  const style = benchmarks.mouseSpeed.status === "above norm"
+    ? "impulsive"
+    : benchmarks.hoverTime.status === "above norm" ? "thoughtful" : "methodical";
+  const confidence = Math.min(98, Math.max(18, Math.round(42 + speed / 35 + clicks * 2)));
+
+  return normalizeProfile({
+    personType: `${style} ${engagement} explorer`,
+    ageGroup: benchmarks.mouseSpeed.status === "above norm" ? "18-25, Gen Z" : benchmarks.mouseSpeed.status === "below norm" ? "41-60, Gen X" : "26-40, Millennials",
+    educationLevel: clicks > 8 ? "Advanced degree" : "Bachelor's degree",
+    profession: pace === "rapid" ? "Digital creator" : "Careful researcher",
+    decisionMakingStyle: `${style} and ${pace}`,
+    curiosity: clicks > 8 ? "Highly curious" : "Quietly curious",
+    confidenceScore: `${confidence}% confidence`,
+    attentionLevel: focus,
+    engagementLevel: engagement,
+    stressLevel: benchmarks.mouseSpeed.status === "above norm" ? "Heightened urgency" : "Low stress",
+    assessmentSummary: `Your interaction pattern falls ${benchmarks.mouseSpeed.status} for speed and ${benchmarks.clickFrequency.status} for clicking. This suggests a ${style}, ${engagement} approach, with ${focus} shaping the exaggerated reading.`
+  });
+}
+
 async function generateProfile() {
   state.ollamaStatus = "loading";
   state.ollamaError = "";
   state.profileSource = "";
   render();
 
-  const localHost = window.location.protocol === "file:"
-    || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-  const endpoint = localHost ? OLLAMA_CONFIG.localBackendEndpoint : OLLAMA_CONFIG.remoteEndpoint;
+  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  const endpoint = localHost ? OLLAMA_CONFIG.endpoint : OLLAMA_CONFIG.remoteEndpoint;
   const remoteEndpointConfigured = endpoint && !endpoint.includes("YOUR_BACKEND_DOMAIN") && !endpoint.includes(".example/");
   if (!localHost && !remoteEndpointConfigured) {
     if (state.screen !== "profile") {
       return;
     }
-    state.profile = emptyProfile();
-    state.profileSource = "";
-    state.ollamaStatus = "error";
+    state.profile = browserGeneratedProfile();
+    state.profileSource = "browser";
+    state.ollamaStatus = "ready";
     state.ollamaError = "Configure OLLAMA_CONFIG.remoteEndpoint for AI-generated profiles.";
     render();
     return;
@@ -397,11 +415,10 @@ async function generateProfile() {
     if (state.screen !== "profile") {
       return;
     }
-    state.profile = emptyProfile();
-    state.profileSource = "";
-    state.ollamaStatus = "error";
-    state.ollamaError = "AI profile generation is unavailable. Connect the Ollama backend to generate this profile.";
-    console.warn("Ollama is unavailable. No profile interpretation was generated.", error);
+    state.profile = browserGeneratedProfile();
+    state.profileSource = "browser";
+    state.ollamaStatus = "ready";
+    console.warn("Ollama is unavailable. Generated a browser profile instead.", error);
   }
   render();
 }
@@ -638,7 +655,7 @@ function renderProfile() {
   const ollamaMessage = state.ollamaStatus === "loading"
     ? "Generating profile with Ollama..."
     : state.ollamaError || (state.ollamaStatus === "ready"
-      ? `Generated with ${OLLAMA_CONFIG.model}`
+      ? state.profileSource === "browser" ? "Generated from your interaction data" : `Generated with ${OLLAMA_CONFIG.model}`
       : "Profile generation not started");
   return `
     <section class="screen" data-screen="profile">

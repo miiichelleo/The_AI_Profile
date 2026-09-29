@@ -58,15 +58,6 @@ function readBody(request) {
 function createPrompt(metrics) {
   const speed = metrics.moveDuration > 0 ? metrics.totalDistance / metrics.moveDuration : 0;
   const clicksPerSecond = metrics.clickCount / EXPERIENCE_SECONDS;
-  const measurements = {
-    mouseSpeed: Number(speed.toFixed(2)),
-    hoverTime: Number((Number(metrics.hoverTime) || 0).toFixed(3)),
-    clickFrequency: Number(clicksPerSecond.toFixed(3)),
-    idleTime: Number((Number(metrics.idleTime) || 0).toFixed(3)),
-    totalDistance: Number((Number(metrics.totalDistance) || 0).toFixed(2)),
-    moveDuration: Number((Number(metrics.moveDuration) || 0).toFixed(3)),
-    clickCount: Number(metrics.clickCount) || 0
-  };
   const benchmark = (value, norm) => ({
     value,
     status: value < norm.low ? "below norm" : value > norm.high ? "above norm" : "within norm",
@@ -83,8 +74,8 @@ function createPrompt(metrics) {
   return `You are generating an intentionally exaggerated fictional profile for an interactive art project.
 Do not make factual psychological, demographic, medical, or identity claims.
 
-Measured numeric interaction values only:
-${JSON.stringify(measurements, null, 2)}
+Measured interaction data:
+${JSON.stringify(metrics, null, 2)}
 
 Research-supported experimental norms. Treat these as the baseline for interpretation:
 ${JSON.stringify(RESEARCH_NORMS, null, 2)}
